@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hutang & Piutang</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Tambah Hutang</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="tipe" value="hutang">
+        {{ hutang_form.as_p }}
+        <button type="submit">Simpan Hutang</button>
+    </form>
+
+    <h2>Tambah Piutang</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="tipe" value="piutang">
+        {{ piutang_form.as_p }}
+        <button type="submit">Simpan Piutang</button>
+    </form>
+
+    <h2>Daftar Hutang</h2>
+    <table>
+        <tr>
+            <th>Tanggal</th>
+            <th>Nominal</th>
+            <th>Keterangan</th>
+        </tr>
+        {% for hutang in hutang_list %}
+        <tr>
+            <td>{{ hutang.tanggal }}</td>
+            <td>Rp{{ hutang.nominal }}</td>
+            <td>{{ hutang.keterangan }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">Belum ada data hutang.</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Daftar Piutang</h2>
+    <table>
+        <tr>
+            <th>Tanggal</th>
+            <th>Nominal</th>
+            <th>Keterangan</th>
+        </tr>
+        {% for piutang in piutang_list %}
+        <tr>
+            <td>{{ piutang.tanggal }}</td>
+            <td>Rp{{ piutang.nominal }}</td>
+            <td>{{ piutang.keterangan }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">Belum ada data piutang.</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>

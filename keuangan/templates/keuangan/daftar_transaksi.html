@@ -1,0 +1,21 @@
+
+{% block content %}
+<h1>Daftar Transaksi</h1>
+<table border="1">
+    <tr>
+        <th>Tanggal</th>
+        <th>Jenis</th>
+        <th>Kategori</th>
+        <th>Jumlah</th>
+    </tr>
+    {% for transaksi in transaksi_list %}
+    <tr>
+        <td>{{ transaksi.tanggal }}</td>
+        <td>{{ transaksi.jenis }}</td>
+        <td>{{ transaksi.kategori }}</td>
+        <td>Rp {{ transaksi.jumlah }}</td>
+    </tr>
+    {% endfor %}
+</table>
+<a href="{% url 'tambah_transaksi' %}">Tambah Transaksi</a>
+{% endblock %}

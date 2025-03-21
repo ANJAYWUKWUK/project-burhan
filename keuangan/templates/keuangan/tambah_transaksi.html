@@ -1,0 +1,9 @@
+{% block content %}
+<h1>Tambah Transaksi</h1>
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Simpan</button>
+</form>
+<a href="{% url 'dashboard' %}">Kembali ke Dashboard</a>
+{% endblock %}

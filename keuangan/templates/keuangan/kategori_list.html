@@ -1,0 +1,11 @@
+<h2>Daftar Kategori</h2>
+
+<a href="{% url 'tambah_kategori' %}">
+    <button>Tambah Kategori</button>
+</a>
+
+<ul>
+    {% for item in kategori %}
+        <li>{{ item.nama }}</li>
+    {% endfor %}
+</ul>

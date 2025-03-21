@@ -1,0 +1,6 @@
+<h3>Tambah Rekening Baru</h3>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Tambah</button>
+</form>
