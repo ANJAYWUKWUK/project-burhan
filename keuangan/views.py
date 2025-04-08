@@ -1,8 +1,8 @@
 from django.db import models 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Bank, Transaksi, Hutang, Piutang, Kategori
-from .forms import TransaksiForm, HutangForm, PiutangForm, BankForm
+from .forms import TransaksiForm, HutangForm, PiutangForm, BankForm, KategoriForm
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import logout
@@ -76,6 +76,24 @@ def tambah_transaksi(request):
     return render(request, 'keuangan/tambah_transaksi.html', {'form': form})
 
 @login_required
+def edit_transaksi(request, pk):
+    transaksi = get_object_or_404(Transaksi, pk=pk)
+    if request.method == 'POST':
+        form = TransaksiForm(request.POST, instance=transaksi)
+        if form.is_valid():
+            form.save()
+            return redirect('daftar_transaksi')
+    else:
+        form = TransaksiForm(instance=transaksi)
+    return render(request, 'keuangan/tambah_transaksi.html', {'form': form})
+
+@login_required
+def hapus_transaksi(request, pk):
+    transaksi = get_object_or_404(Transaksi, pk=pk)
+    transaksi.delete()
+    return redirect('daftar_transaksi')
+
+@login_required
 def rekening_bank(request):
     if request.method == 'POST':
         form = BankForm(request.POST)
@@ -122,6 +140,20 @@ def tambah_kategori(request):
         form = KategoriForm()
 
     return render(request, 'keuangan/tambah_kategori.html', {'form': form})
+
+
+def edit_kategori(request, pk):
+    kategori = get_object_or_404(Kategori, pk=pk)
+    form = KategoriForm(request.POST or None, instance=kategori)
+    if form.is_valid():
+        form.save()
+        return redirect('kategori_list')
+    return render(request, 'keuangan/tambah_kategori.html', {'form': form})
+
+def hapus_kategori(request, pk):
+    kategori = get_object_or_404(Kategori, pk=pk)
+    kategori.delete()
+    return redirect('kategori_list')
 
 def hutang_piutang(request):
     if request.method == 'POST':
