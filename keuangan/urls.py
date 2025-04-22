@@ -18,7 +18,11 @@ urlpatterns = [
     path('kategori/edit/<int:pk>/', views.edit_kategori, name='edit_kategori'),
     path('kategori/hapus/<int:pk>/', views.hapus_kategori, name='hapus_kategori'),
     path('hutang-piutang/', views.hutang_piutang, name='hutang_piutang'),
-    path('login/', views.login_view, name='login'),
+    path('edit-hutang/<int:id>/', views.edit_hutang, name='edit_hutang'),
+    path('hapus-hutang/<int:id>/', views.hapus_hutang, name='hapus_hutang'),
+    path('edit-piutang/<int:id>/', views.edit_piutang, name='edit_piutang'),
+    path('hapus-piutang/<int:id>/', views.hapus_piutang, name='hapus_piutang'),
+    
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -68,3 +68,17 @@ class User(models.Model):
 
     def __str__(self):
         return self.username
+
+class HutangPiutang(models.Model):
+    TipeChoices = [
+        ('hutang', 'Hutang'),
+        ('piutang', 'Piutang'),
+    ]
+
+    tanggal = models.DateField()
+    nominal = models.IntegerField()
+    keterangan = models.TextField()
+    tipe = models.CharField(max_length=10, choices=TipeChoices)
+
+    def __str__(self):
+        return f"{self.tipe.title()} - {self.nominal}"

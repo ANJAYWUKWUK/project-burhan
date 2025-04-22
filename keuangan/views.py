@@ -1,15 +1,17 @@
 from django.db import models 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import Bank, Transaksi, Hutang, Piutang, Kategori
-from .forms import TransaksiForm, HutangForm, PiutangForm, BankForm, KategoriForm
+from .models import Bank, Transaksi, Hutang, Piutang, Kategori, HutangPiutang
+from .forms import TransaksiForm, HutangForm, PiutangForm, BankForm, KategoriForm, HutangPiutangForm
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import logout
+from django.contrib import messages
 from .forms import KategoriForm, BankForm
 from django.db.models import Sum
 from django.utils import timezone
 import json
+from .forms import HutangPiutangForm
 
 @login_required
 def dashboard(request):
@@ -187,3 +189,50 @@ def hutang_piutang(request):
         'hutang_form': HutangForm(),  # Tambahkan form ke context
         'piutang_form': PiutangForm(),  # Tambahkan form ke context
     })
+
+
+# Edit Hutang
+def edit_hutang(request, id):
+    hutang = get_object_or_404(HutangPiutang, id=id, tipe='hutang')  # pastikan ID ini memang hutang
+    if request.method == 'POST':
+        form = HutangPiutangForm(request.POST, instance=hutang)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Data hutang berhasil diperbarui.')
+            return redirect('hutang_piutang')
+    else:
+        form = HutangPiutangForm(instance=hutang)
+    return render(request, 'keuangan/edit_hutang_piutang.html', {
+        'form': form,
+        'judul': 'Edit Hutang'
+    })
+
+# Edit Piutang
+def edit_piutang(request, id):
+    piutang = get_object_or_404(HutangPiutang, id=id, tipe='piutang')
+    if request.method == 'POST':
+        form = HutangPiutangForm(request.POST, instance=piutang)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Data piutang berhasil diperbarui.')
+            return redirect('hutang_piutang')
+    else:
+        form = HutangPiutangForm(instance=piutang)
+    return render(request, 'keuangan/edit_hutang_piutang.html', {
+        'form': form,
+        'judul': 'Edit Piutang'
+    })
+
+# Hapus Hutang
+def hapus_hutang(request, id):
+    hutang = get_object_or_404(HutangPiutang, id=id, tipe='hutang')
+    hutang.delete()
+    messages.success(request, 'Data hutang berhasil dihapus.')
+    return redirect('hutang_piutang')
+
+# Hapus Piutang
+def hapus_piutang(request, id):
+    piutang = get_object_or_404(HutangPiutang, id=id, tipe='piutang')
+    piutang.delete()
+    messages.success(request, 'Data piutang berhasil dihapus.')
+    return redirect('hutang_piutang')
