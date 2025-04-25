@@ -5,13 +5,16 @@ from django.conf.urls.static import static
 
 
 urlpatterns = [
-    path('', views.dashboard, name='dashboard'),
+    path('accounts/login/', views.login_view, name='login'),
+    path('dashboard/', views.dashboard_redirect, name='dashboard_redirect'),
+    path('dashboard/admin/', views.dashboard, name='dashboard_admin'),
+    path('dashboard/siswa/', views.dashboard_siswa, name='dashboard_siswa'),
     path('transaksi/', views.daftar_transaksi, name='daftar_transaksi'),
     path('transaksi/tambah/', views.tambah_transaksi, name='tambah_transaksi'),
     path('transaksi/edit/<int:pk>/', views.edit_transaksi, name='edit_transaksi'),
     path('transaksi/hapus/<int:pk>/', views.hapus_transaksi, name='hapus_transaksi'),
     path('rekening-bank/', views.rekening_bank, name='rekening_bank'),
-    path('login/', views.login_view, name='login'),
+    
     path('logout/', views.logout_view, name='logout'),
     path('kategori/', views.kategori_list, name='kategori_list'),
     path('kategori/tambah/', views.tambah_kategori, name='tambah_kategori'),
@@ -22,7 +25,9 @@ urlpatterns = [
     path('hapus-hutang/<int:id>/', views.hapus_hutang, name='hapus_hutang'),
     path('edit-piutang/<int:id>/', views.edit_piutang, name='edit_piutang'),
     path('hapus-piutang/<int:id>/', views.hapus_piutang, name='hapus_piutang'),
-    
+    path('admin/pembayaran/', views.kelola_pembayaran, name='kelola_pembayaran'),
+    path('siswa/tagihan/', views.tagihan_spp, name='tagihan_spp'),
+
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

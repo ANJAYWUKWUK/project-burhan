@@ -1,5 +1,27 @@
 from django.db import models
 
+from django.contrib.auth.models import User
+
+STATUS_CHOICES = [
+    ('belum lunas', 'Belum Lunas'),
+    ('lunas', 'Lunas'),
+]
+
+BULAN_CHOICES = [
+    ('01', 'Januari'),
+    ('02', 'Februari'),
+    ('03', 'Maret'),
+    ('04', 'April'),
+    ('05', 'Mei'),
+    ('06', 'Juni'),
+    ('07', 'Juli'),
+    ('08', 'Agustus'),
+    ('09', 'September'),
+    ('10', 'Oktober'),
+    ('11', 'November'),
+    ('12', 'Desember'),
+]
+
 class Bank(models.Model):
     nama = models.CharField(max_length=255)
     nomor = models.CharField(max_length=255)
@@ -59,15 +81,17 @@ class Transaksi(models.Model):
     def __str__(self):
         return f"{self.jenis} - {self.nominal}"
 
-class User(models.Model):
-    nama = models.CharField(max_length=100)
-    username = models.CharField(max_length=100, unique=True)
-    password = models.CharField(max_length=100)
-    foto = models.CharField(max_length=100, blank=True, null=True)
-    level = models.CharField(max_length=20)
+class UserProfile(models.Model):
+    ROLE_CHOICES = (
+        ('admin', 'Admin'),
+        ('siswa', 'Siswa'),
+    )
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
 
     def __str__(self):
-        return self.username
+        return f"{self.user.username} - {self.role}"
+
 
 class HutangPiutang(models.Model):
     TipeChoices = [
@@ -82,3 +106,27 @@ class HutangPiutang(models.Model):
 
     def __str__(self):
         return f"{self.tipe.title()} - {self.nominal}"
+    
+class Siswa(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    nama = models.CharField(max_length=100)
+    no_rekening = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.nama
+
+class PembayaranSPP(models.Model):
+    siswa = models.ForeignKey(Siswa, on_delete=models.CASCADE)
+    bulan = models.CharField(max_length=2, choices=BULAN_CHOICES)
+    jumlah_bayar = models.DecimalField(max_digits=10, decimal_places=2)
+    status_bayar = models.CharField(max_length=20, choices=STATUS_CHOICES, default='belum lunas')
+    tanggal_bayar = models.DateField(auto_now_add=True)
+    bukti_pembayaran = models.ImageField(upload_to='bukti_pembayaran/', blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.siswa.nama} - {self.get_bulan_display()} - {self.status_bayar}"
+
+
+# models.py
+from django.contrib.auth.models import User
+

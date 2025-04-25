@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+{% block content %}
+<h2>Tagihan SPP Saya</h2>
+<table border="1" cellpadding="8">
+    <thead>
+        <tr>
+            <th>Bulan</th>
+            <th>Jumlah</th>
+            <th>Status</th>
+            <th>Tanggal Bayar</th>
+            <th>Bukti Pembayaran</th>
+            <th>Upload Bukti</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for bayar in pembayaran_list %}
+        <tr>
+            <td>{{ bayar.get_bulan_display }}</td>
+            <td>Rp{{ bayar.jumlah_bayar|intcomma }}</td>
+            <td>{{ bayar.status_bayar }}</td>
+            <td>{{ bayar.tanggal_bayar }}</td>
+            <td>
+                {% if bayar.bukti_pembayaran %}
+                    <a href="{{ bayar.bukti_pembayaran.url }}" target="_blank">Lihat</a>
+                {% else %}
+                    Belum Ada
+                {% endif %}
+            </td>
+            <td>
+                {% if bayar.status_bayar == 'belum lunas' %}
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="pembayaran_id" value="{{ bayar.id }}">
+                    {{ form.bukti_pembayaran }}
+                    <button type="submit">Upload</button>
+                </form>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+</body>
+</html>

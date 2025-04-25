@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Bank, Hutang, Kategori, Piutang, Transaksi, User
+from .models import Bank, Hutang, Kategori, Piutang, Transaksi, UserProfile, Siswa
 
 @admin.register(Bank)
 class BankAdmin(admin.ModelAdmin):
@@ -29,10 +29,7 @@ class TransaksiAdmin(admin.ModelAdmin):
     search_fields = ('keterangan', 'jenis')
     list_filter = ('tanggal', 'jenis', 'kategori')
 
-@admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    list_display = ('id', 'nama', 'username', 'level')
-    search_fields = ('nama', 'username')
-    list_filter = ('level',)
+admin.site.register(UserProfile)
+admin.site.register(Siswa)
 
 # Bisa juga pakai admin.site.register(Bank), admin.site.register(Transaksi), dll.

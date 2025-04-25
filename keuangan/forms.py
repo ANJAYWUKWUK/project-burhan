@@ -1,5 +1,5 @@
 from django import forms
-from .models import Transaksi, Hutang, Piutang, Bank, Kategori
+from .models import Transaksi, Hutang, Piutang, Bank, Kategori, PembayaranSPP
 
 class TransaksiForm(forms.ModelForm):
     class Meta:
@@ -62,3 +62,9 @@ class KategoriForm(forms.ModelForm):
         widgets = {
             'nama': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Masukkan nama kategori'}),
         }
+
+
+class BuktiPembayaranForm(forms.ModelForm):
+    class Meta:
+        model = PembayaranSPP
+        fields = ['bukti_pembayaran']

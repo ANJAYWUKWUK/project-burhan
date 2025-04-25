@@ -1,8 +1,8 @@
 from django.db import models 
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from .models import Bank, Transaksi, Hutang, Piutang, Kategori, HutangPiutang
-from .forms import TransaksiForm, HutangForm, PiutangForm, BankForm, KategoriForm, HutangPiutangForm
+from django.contrib.auth.decorators import login_required, user_passes_test
+from .models import Bank, Transaksi, Hutang, Piutang, Kategori, HutangPiutang,PembayaranSPP, Siswa
+from .forms import TransaksiForm, HutangForm, PiutangForm, BankForm, KategoriForm, HutangPiutangForm,BuktiPembayaranForm
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import logout
@@ -11,7 +11,28 @@ from .forms import KategoriForm, BankForm
 from django.db.models import Sum
 from django.utils import timezone
 import json
-from .forms import HutangPiutangForm
+from .models import UserProfile
+from django.contrib.auth import authenticate, login
+
+def login_view(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)  # HARUS ADA INI
+            return redirect('dashboard_redirect')  # pastikan 'dashboard' ini ada di urls.py
+    else:
+        form = AuthenticationForm()
+    return render(request, 'keuangan/login.html', {'form': form})
+
+@login_required
+def dashboard_redirect(request):
+    if hasattr(request.user, 'profile'):
+        if request.user.profile.role == 'admin':
+            return redirect('dashboard_admin')
+        elif request.user.profile.role == 'siswa':
+            return redirect('dashboard_siswa')
+    return redirect('login')
 
 @login_required
 def dashboard(request):
@@ -59,6 +80,14 @@ def dashboard(request):
         'pengeluaran_bulanan': json.dumps(pengeluaran_bulanan),
     }
     return render(request, 'keuangan/dashboard.html', context)
+
+@login_required
+def dashboard_siswa(request):
+    if request.user.profile.role != 'siswa':
+        return redirect('dashboard_admin')  # redirect kalau bukan siswa
+
+    tagihan_saya = PembayaranSPP.objects.filter(user=request.user)
+    return render(request, 'keuangan/dashboard_siswa.html', {'tagihan': tagihan_saya})
 
 @login_required
 def daftar_transaksi(request):
@@ -113,16 +142,8 @@ def rekening_bank(request):
         'form': form
     })
 
-def login_view(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            return redirect('dashboard')  # Ganti dengan halaman setelah login
-    else:
-        form = AuthenticationForm()
-    return render(request, 'keuangan/login.html', {'form': form})
+
+
 
 def logout_view(request):
     logout(request)
@@ -142,6 +163,7 @@ def tambah_kategori(request):
         form = KategoriForm()
 
     return render(request, 'keuangan/tambah_kategori.html', {'form': form})
+
 
 
 def edit_kategori(request, pk):
@@ -236,3 +258,52 @@ def hapus_piutang(request, id):
     piutang.delete()
     messages.success(request, 'Data piutang berhasil dihapus.')
     return redirect('hutang_piutang')
+
+
+@login_required
+def kelola_pembayaran(request):
+    # Ambil semua data pembayaran, urutkan berdasarkan nama siswa dan bulan
+    pembayaran_list = PembayaranSPP.objects.all().order_by('siswa__nama', 'bulan')
+
+    if request.method == 'POST':
+        pembayaran_id = request.POST.get('pembayaran_id')
+        pembayaran = get_object_or_404(PembayaranSPP, id=pembayaran_id)
+
+        # Tandai sebagai lunas
+        pembayaran.status_bayar = 'lunas'
+        pembayaran.save()
+
+        return redirect('kelola_pembayaran')
+
+    return render(request, 'admin/kelola_pembayaran.html', {
+        'pembayaran_list': pembayaran_list
+    })
+
+# Siswa View: Lihat tagihan pribadi & upload bukti
+@login_required
+def tagihan_spp(request):
+    # Ambil data siswa berdasarkan user yang login
+    siswa = get_object_or_404(Siswa, user=request.user)
+
+    # Ambil semua tagihan siswa tersebut
+    pembayaran_list = PembayaranSPP.objects.filter(siswa=siswa).order_by('bulan')
+
+    if request.method == 'POST':
+        pembayaran_id = request.POST.get('pembayaran_id')
+        pembayaran = get_object_or_404(PembayaranSPP, id=pembayaran_id, siswa=siswa)
+
+        form = BuktiPembayaranForm(request.POST, request.FILES, instance=pembayaran)
+        if form.is_valid():
+            # Simpan bukti pembayaran dan ubah status jadi "pending" atau lainnya
+            pembayaran.status = 'pending'  # optional: kalau lo ada field status
+            form.save()
+            return redirect('tagihan_spp')
+    else:
+        form = BuktiPembayaranForm()
+
+    return render(request, 'keuangan/siswa/tagihan_spp.html', {
+        'pembayaran_list': pembayaran_list,
+        'form': form
+    })
+
+
