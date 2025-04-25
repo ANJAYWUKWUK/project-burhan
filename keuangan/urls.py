@@ -25,8 +25,9 @@ urlpatterns = [
     path('hapus-hutang/<int:id>/', views.hapus_hutang, name='hapus_hutang'),
     path('edit-piutang/<int:id>/', views.edit_piutang, name='edit_piutang'),
     path('hapus-piutang/<int:id>/', views.hapus_piutang, name='hapus_piutang'),
-    path('admin/pembayaran/', views.kelola_pembayaran, name='kelola_pembayaran'),
+    path('dashboard-admin/pembayaran/', views.kelola_pembayaran, name='kelola_pembayaran'),
     path('siswa/tagihan/', views.tagihan_spp, name='tagihan_spp'),
+    path('test-email/', views.test_email, name='test_email'),       
 
 ]
 if settings.DEBUG:

@@ -11,8 +11,11 @@ from .forms import KategoriForm, BankForm
 from django.db.models import Sum
 from django.utils import timezone
 import json
-
+from django.conf import settings
 from django.contrib.auth import authenticate, login
+from django.core.mail import send_mail
+from django.http import HttpResponse
+
 
 def login_view(request):
     if request.method == 'POST':
@@ -282,11 +285,14 @@ def kelola_pembayaran(request):
 
         return redirect('kelola_pembayaran')
 
-    return render(request, 'admin/kelola_pembayaran.html', {
+    return render(request, 'keuangan/admin/kelola_pembayaran.html', {
         'pembayaran_list': pembayaran_list
     })
 
+def is_siswa(user):
+    return hasattr(user, 'siswa')
 # Siswa View: Lihat tagihan pribadi & upload bukti
+@user_passes_test(is_siswa, login_url='/login/')
 @login_required
 def tagihan_spp(request):
     # Ambil data siswa berdasarkan user yang login
@@ -304,6 +310,15 @@ def tagihan_spp(request):
             # Simpan bukti pembayaran dan ubah status jadi "pending" atau lainnya
             pembayaran.status = 'pending'  # optional: kalau lo ada field status
             form.save()
+
+            send_mail(
+                subject=f'Bukti Pembayaran SPP Masuk - {pembayaran.siswa.nama}',
+                message=f'Siswa {pembayaran.siswa.nama} telah mengupload bukti pembayaran untuk bulan {pembayaran.bulan}. Jumlah yang dibayar: {pembayaran.jumlah_bayar}.',
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[settings.ADMIN_EMAIL],
+                fail_silently=False,
+            )
+
             return redirect('tagihan_spp')
     else:
         form = BuktiPembayaranForm()
@@ -313,4 +328,13 @@ def tagihan_spp(request):
         'form': form
     })
 
+def test_email(request):
+    send_mail(
+        subject='[TEST] Bukti Pembayaran Masuk',
+        message='Ini adalah simulasi notifikasi: Siswa Fulan sudah upload bukti pembayaran.',
+        from_email=settings.EMAIL_HOST_USER,
+        recipient_list=[settings.ADMIN_EMAIL],
+        fail_silently=False,
+    )
+    return HttpResponse("Email test berhasil dikirim.")
 

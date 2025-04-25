@@ -116,7 +116,16 @@ class PembayaranSPP(models.Model):
     def __str__(self):
         return f"{self.siswa.nama} - {self.get_bulan_display()} - {self.status_bayar}"
 
-
+class Pembayaran(models.Model):
+    siswa = models.ForeignKey(User, on_delete=models.CASCADE)
+    jumlah_bayar = models.DecimalField(max_digits=10, decimal_places=2)
+    status_bayar = models.BooleanField(default=False)
+    tanggal_bayar = models.DateField(auto_now_add=True)
+    bukti_pembayaran = models.FileField(upload_to='bukti_pembayaran/', null=True, blank=True)
+    tanggal_verifikasi = models.DateField(null=True, blank=True)
+    
+    def __str__(self):
+        return f'{self.siswa.username} - {self.jumlah_bayar}'
 # models.py
 
 

@@ -2,13 +2,79 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=\, initial-scale=1.0">
-    <title>Document</title>
+    <title>Kelola Pembayaran SPP</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+            color: #333;
+            padding: 40px;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        h2 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            animation: slideUp 1s ease-in-out;
+        }
+
+        thead {
+            background-color: #0072ff;
+            color: white;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+            transition: 0.3s;
+        }
+
+        button {
+            padding: 8px 15px;
+            background-color: #28a745;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 <body>
-{% block content %}
+
 <h2>Kelola Pembayaran SPP</h2>
-<table border="1" cellpadding="8">
+
+<table>
     <thead>
         <tr>
             <th>Nama Siswa</th>
@@ -16,7 +82,7 @@
             <th>Jumlah</th>
             <th>Status</th>
             <th>Tanggal Bayar</th>
-            <th>Bukti Pembayaran</th>
+            <th>Bukti</th>
             <th>Aksi</th>
         </tr>
     </thead>
@@ -25,32 +91,31 @@
         <tr>
             <td>{{ bayar.siswa.nama }}</td>
             <td>{{ bayar.get_bulan_display }}</td>
-            <td>Rp{{ bayar.jumlah_bayar|intcomma }}</td>
+            <td>Rp{{ bayar.jumlah_bayar }}</td>
             <td>{{ bayar.status_bayar }}</td>
-            <td>{{ bayar.tanggal_bayar }}</td>
+            <td>{{ bayar.tanggal_bayar|default:"-" }}</td>
             <td>
                 {% if bayar.bukti_pembayaran %}
-                    <a href="{{ bayar.bukti_pembayaran.url }}" target="_blank">Lihat Bukti</a>
+                    <a href="{{ bayar.bukti_pembayaran.url }}" target="_blank">Lihat</a>
                 {% else %}
-                    Belum Upload
+                    Belum Ada
                 {% endif %}
             </td>
             <td>
-                {% if bayar.status_bayar == 'belum lunas' and bayar.bukti_pembayaran %}
+                {% if bayar.status_bayar == 'belum lunas' %}
                 <form method="POST">
                     {% csrf_token %}
                     <input type="hidden" name="pembayaran_id" value="{{ bayar.id }}">
-                    <button type="submit">Set Lunas</button>
+                    <button type="submit">Tandai Lunas</button>
                 </form>
                 {% else %}
-                    -
+                    ✅ Lunas
                 {% endif %}
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
-{% endblock %}
 
 </body>
 </html>
