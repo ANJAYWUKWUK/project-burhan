@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Bank, Hutang, Kategori, Piutang, Transaksi, UserProfile, Siswa
+from .models import Bank, Hutang, Kategori, Piutang, Transaksi, Siswa,PembayaranSPP
 
 @admin.register(Bank)
 class BankAdmin(admin.ModelAdmin):
@@ -29,7 +29,15 @@ class TransaksiAdmin(admin.ModelAdmin):
     search_fields = ('keterangan', 'jenis')
     list_filter = ('tanggal', 'jenis', 'kategori')
 
-admin.site.register(UserProfile)
+
 admin.site.register(Siswa)
+
+class PembayaranSPPAdmin(admin.ModelAdmin):
+    list_display = ('siswa', 'bulan', 'jumlah_bayar', 'status_bayar', 'tanggal_bayar', 'bukti_pembayaran')
+    list_filter = ('bulan', 'status_bayar')  # Filter berdasarkan bulan dan status bayar
+    search_fields = ('siswa__nama', 'bulan')  # Search berdasarkan nama siswa dan bulan
+    list_editable = ('status_bayar',)  # Bisa langsung edit status bayar dari list view
+
+admin.site.register(PembayaranSPP, PembayaranSPPAdmin)
 
 # Bisa juga pakai admin.site.register(Bank), admin.site.register(Transaksi), dll.

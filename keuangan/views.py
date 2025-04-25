@@ -11,7 +11,7 @@ from .forms import KategoriForm, BankForm
 from django.db.models import Sum
 from django.utils import timezone
 import json
-from .models import UserProfile
+
 from django.contrib.auth import authenticate, login
 
 def login_view(request):
@@ -27,15 +27,20 @@ def login_view(request):
 
 @login_required
 def dashboard_redirect(request):
-    if hasattr(request.user, 'profile'):
-        if request.user.profile.role == 'admin':
-            return redirect('dashboard_admin')
-        elif request.user.profile.role == 'siswa':
-            return redirect('dashboard_siswa')
+    user = request.user
+    if user.groups.filter(name='Admin').exists():
+        return redirect('dashboard_admin')
+    elif user.groups.filter(name='Siswa').exists():
+        return redirect('dashboard_siswa')
     return redirect('login')
+
 
 @login_required
 def dashboard(request):
+    user = request.user
+    if not user.groups.filter(name='Admin').exists():
+        return redirect('dashboard_siswa')
+    
     today = timezone.now().date()
     this_month = timezone.now().month
     this_year = timezone.now().year
@@ -83,11 +88,13 @@ def dashboard(request):
 
 @login_required
 def dashboard_siswa(request):
-    if request.user.profile.role != 'siswa':
-        return redirect('dashboard_admin')  # redirect kalau bukan siswa
+    user = request.user
+    # Cek apakah user termasuk grup Siswa
+    if not user.groups.filter(name='Siswa').exists():
+        return redirect('dashboard_admin')  # atau redirect ke mana pun kalau bukan siswa
 
-    tagihan_saya = PembayaranSPP.objects.filter(user=request.user)
-    return render(request, 'keuangan/dashboard_siswa.html', {'tagihan': tagihan_saya})
+    tagihan_saya = PembayaranSPP.objects.filter(siswa__user=request.user)
+    return render(request, 'keuangan/siswa/dashboard_siswa.html', {'tagihan': tagihan_saya})
 
 @login_required
 def daftar_transaksi(request):

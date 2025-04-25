@@ -4,11 +4,168 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #e0eafc, #cfdef3);
+            padding: 40px;
+            margin: 0;
+            animation: fadeIn 1s ease-in;
+        }
+    
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            animation: slideDown 1s ease-out;
+        }
+    
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.8s ease-out;
+        }
+    
+        th, td {
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 1em;
+        }
+    
+        thead {
+            background-color: #3498db;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    
+        tbody tr {
+            transition: background-color 0.3s ease;
+        }
+    
+        tbody tr:hover {
+            background-color: #f0f9ff;
+        }
+    
+        td a {
+            color: #2980b9;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+    
+        td a:hover {
+            color: #1abc9c;
+        }
+    
+        input[type="file"] {
+            padding: 6px;
+            font-size: 0.9em;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s ease;
+        }
+    
+        input[type="file"]:hover {
+            border-color: #3498db;
+        }
+    
+        button {
+            margin-top: 6px;
+            padding: 8px 14px;
+            background-color: #2ecc71;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s;
+        }
+    
+        button:hover {
+            background-color: #27ae60;
+            transform: scale(1.05);
+        }
+    
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    
+        /* Responsive */
+        @media (max-width: 768px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+    
+            thead {
+                display: none;
+            }
+    
+            tr {
+                margin-bottom: 15px;
+                background-color: #fff;
+                border-radius: 10px;
+                box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+                padding: 12px;
+            }
+    
+            td {
+                text-align: left;
+                padding: 10px 15px;
+                position: relative;
+            }
+    
+            td:before {
+                content: attr(data-label);
+                position: absolute;
+                left: 15px;
+                top: 10px;
+                font-weight: bold;
+                text-transform: uppercase;
+                color: #888;
+            }
+    
+            td input[type="file"], td button {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
 
 {% block content %}
-<h2>Tagihan SPP Saya</h2>
+<h2>Tagihan SPP {{ request.user.username }}</h2>
+
 <table border="1" cellpadding="8">
     <thead>
         <tr>
@@ -24,7 +181,7 @@
         {% for bayar in pembayaran_list %}
         <tr>
             <td>{{ bayar.get_bulan_display }}</td>
-            <td>Rp{{ bayar.jumlah_bayar|intcomma }}</td>
+            <td>Rp{{ bayar.jumlah_bayar }}</td>
             <td>{{ bayar.status_bayar }}</td>
             <td>{{ bayar.tanggal_bayar }}</td>
             <td>

@@ -1,5 +1,4 @@
 from django.db import models
-
 from django.contrib.auth.models import User
 
 STATUS_CHOICES = [
@@ -81,16 +80,7 @@ class Transaksi(models.Model):
     def __str__(self):
         return f"{self.jenis} - {self.nominal}"
 
-class UserProfile(models.Model):
-    ROLE_CHOICES = (
-        ('admin', 'Admin'),
-        ('siswa', 'Siswa'),
-    )
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
 
-    def __str__(self):
-        return f"{self.user.username} - {self.role}"
 
 
 class HutangPiutang(models.Model):
@@ -128,5 +118,5 @@ class PembayaranSPP(models.Model):
 
 
 # models.py
-from django.contrib.auth.models import User
+
 
