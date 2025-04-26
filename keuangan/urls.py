@@ -15,7 +15,7 @@ urlpatterns = [
     path('transaksi/edit/<int:pk>/', views.edit_transaksi, name='edit_transaksi'),
     path('transaksi/hapus/<int:pk>/', views.hapus_transaksi, name='hapus_transaksi'),
     path('rekening-bank/', views.rekening_bank, name='rekening_bank'),
-    
+    path('siswa/', views.daftar_siswa, name='daftar_siswa'),
     path('logout/', views.logout_view, name='logout'),
     path('kategori/', views.kategori_list, name='kategori_list'),
     path('kategori/tambah/', views.tambah_kategori, name='tambah_kategori'),

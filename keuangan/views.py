@@ -395,3 +395,16 @@ def export_pembayaran_excel(request):
     )
     response['Content-Disposition'] = 'attachment; filename=pembayaran_spp.xlsx'
     return response
+
+def daftar_siswa(request):
+    siswa_list = Siswa.objects.all()
+
+    if request.method == "POST":
+        siswa_id = request.POST.get("siswa_id")
+        kelas_baru = request.POST.get("kelas_baru")
+        siswa = get_object_or_404(Siswa, id=siswa_id)
+        siswa.kelas = kelas_baru
+        siswa.save()
+        return redirect('daftar_siswa')  # ganti dengan nama URL kamu
+
+    return render(request, 'keuangan/admin/daftar_siswa.html', {'siswa_list': siswa_list})

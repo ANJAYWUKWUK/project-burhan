@@ -29,9 +29,6 @@ class TransaksiAdmin(admin.ModelAdmin):
     search_fields = ('keterangan', 'jenis')
     list_filter = ('tanggal', 'jenis', 'kategori')
 
-
-admin.site.register(Siswa)
-
 class PembayaranSPPAdmin(admin.ModelAdmin):
     list_display = ('siswa', 'bulan', 'jumlah_bayar', 'status_bayar', 'tanggal_bayar', 'bukti_pembayaran')
     list_filter = ('bulan', 'status_bayar')  # Filter berdasarkan bulan dan status bayar
@@ -39,5 +36,34 @@ class PembayaranSPPAdmin(admin.ModelAdmin):
     list_editable = ('status_bayar',)  # Bisa langsung edit status bayar dari list view
 
 admin.site.register(PembayaranSPP, PembayaranSPPAdmin)
+
+@admin.register(Siswa)
+class SiswaAdmin(admin.ModelAdmin):
+    list_display = ('nama', 'kelas', 'no_rekening')
+    search_fields = ('nama', 'kelas')
+    actions = ['naik_kelas']
+
+    @admin.action(description='Naikkan kelas siswa terpilih')
+    def naik_kelas(self, request, queryset):
+        for siswa in queryset:
+            siswa.kelas = self.get_kelas_baru(siswa.kelas)
+            siswa.save()
+
+    def get_kelas_baru(self, kelas_sekarang):
+        # Logika kenaikan kelas
+        kelas_mapping = {
+            '1A': '2A',
+            '1B': '2B',
+            '2A': '3A',
+            '2B': '3B',
+            '3A': '4A',
+            '3B': '4B',
+            '4A': '5A',
+            '4B': '5B',
+            '5A': '6A',
+            '5B': '6B',
+            # Tambahin kalau ada kelas lain
+        }
+        return kelas_mapping.get(kelas_sekarang, kelas_sekarang)  # Kalau tidak ketemu, tetapin kelas lama
 
 # Bisa juga pakai admin.site.register(Bank), admin.site.register(Transaksi), dll.

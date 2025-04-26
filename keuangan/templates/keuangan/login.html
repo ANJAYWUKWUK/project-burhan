@@ -1,9 +1,168 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Absensi Guru</title>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <style>
+    /* Gaya Umum untuk Halaman Login */
+    body {
+        background-color: #f4f7fb;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: #333;
+    }
+
+    /* Kontainer Login */
+    .container {
+        width: 100%;
+        max-width: 450px;
+        background-color: #ffffff;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .container:hover {
+        transform: translateY(-10px);
+    }
+
+    /* Judul Halaman Login */
+    h2 {
+        color: #4e73df;
+        font-size: 30px;
+        margin-bottom: 30px;
+        font-weight: 600;
+    }
+
+    /* Formulir */
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* Input Field */
+    input[type="text"], input[type="password"] {
+        padding: 14px;
+        font-size: 16px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        margin-bottom: 25px;
+        width: 100%;
+        box-sizing: border-box;
+        transition: border-color 0.3s ease;
+    }
+
+    input[type="text"]:focus, input[type="password"]:focus {
+        border-color: #4e73df;
+        outline: none;
+    }
+
+    /* Tombol Login */
+    button[type="submit"] {
+        background-color: #4e73df;
+        color: white;
+        font-size: 16px;
+        padding: 14px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    button[type="submit"]:hover {
+        background-color: #2e59d9;
+    }
+
+    /* Gaya untuk CSRF Token */
+    input[type="hidden"] {
+        display: none;
+    }
+
+    /* Pesan Error */
+    .error-message {
+        color: #dc3545;
+        font-size: 14px;
+        margin-top: -10px;
+        text-align: left;
+    }
+
+    /* Tautan Registrasi atau Lupa Password */
+    a {
+        color: #4e73df;
+        text-decoration: none;
+        font-size: 14px;
+        margin-top: 15px;
+        display: inline-block;
+        transition: color 0.3s ease;
+    }
+
+    a:hover {
+        color: #2e59d9;
+        text-decoration: underline;
+    }
+
+    /* Link Container */
+    .link-container {
+        margin-top: 15px;
+    }
+
+    /* Animasi Loading (opsional) */
+    .loading {
+        display: none;
+        font-size: 16px;
+        color: #4e73df;
+        margin-top: 15px;
+        text-align: center;
+    }
+
+    .loading.active {
+        display: block;
+    }
+
+    </style>
+</head>
+<body>
 
 {% block content %}
-<h2>Login</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Login</button>
-</form>
+<div class="container">
+    <h2>Login</h2>
+    
+    <!-- Form Login -->
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- Input untuk Username -->
+        <div class="form-group">
+            <label for="username">Username</label>
+            {{ form.username }}
+        </div>
+        
+        <!-- Input untuk Password -->
+        <div class="form-group">
+            <label for="password">Password</label>
+            {{ form.password }}
+        </div>
+
+        <!-- Tombol Login -->
+        <button type="submit">Login</button>
+
+        <!-- Tautan Lupa Password atau Registrasi (opsional) -->
+    </form>
+</div>
 {% endblock %}
+
+</body>
+</html>
