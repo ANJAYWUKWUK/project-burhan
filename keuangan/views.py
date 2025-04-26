@@ -15,7 +15,8 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.core.mail import send_mail
 from django.http import HttpResponse
-
+import openpyxl
+from io import BytesIO
 
 def login_view(request):
     if request.method == 'POST':
@@ -272,21 +273,44 @@ def hapus_piutang(request, id):
 
 @login_required
 def kelola_pembayaran(request):
-    # Ambil semua data pembayaran, urutkan berdasarkan nama siswa dan bulan
-    pembayaran_list = PembayaranSPP.objects.all().order_by('siswa__nama', 'bulan')
+    # Ambil daftar semua kelas unik
+    kelas_list = Siswa.objects.values_list('kelas', flat=True).distinct()
+
+    kelas_terpilih = request.GET.get('kelas')
+    search_nama = request.GET.get('search_nama')
+
+    pembayaran_list = PembayaranSPP.objects.all()
+
+    if kelas_terpilih:
+        pembayaran_list = pembayaran_list.filter(siswa__kelas=kelas_terpilih)
+
+    if search_nama:
+        pembayaran_list = pembayaran_list.filter(siswa__nama__icontains=search_nama)
+
+    pembayaran_list = pembayaran_list.order_by('siswa__nama', 'bulan')
 
     if request.method == 'POST':
         pembayaran_id = request.POST.get('pembayaran_id')
         pembayaran = get_object_or_404(PembayaranSPP, id=pembayaran_id)
 
-        # Tandai sebagai lunas
         pembayaran.status_bayar = 'lunas'
         pembayaran.save()
 
-        return redirect('kelola_pembayaran')
+        redirect_url = request.path
+        if kelas_terpilih or search_nama:
+            redirect_url += '?'
+            if kelas_terpilih:
+                redirect_url += f'kelas={kelas_terpilih}&'
+            if search_nama:
+                redirect_url += f'search_nama={search_nama}'
+
+        return redirect(redirect_url)
 
     return render(request, 'keuangan/admin/kelola_pembayaran.html', {
-        'pembayaran_list': pembayaran_list
+        'pembayaran_list': pembayaran_list,
+        'kelas_list': kelas_list,
+        'kelas_terpilih': kelas_terpilih,
+        'search_nama': search_nama,
     })
 
 def is_siswa(user):
@@ -338,3 +362,36 @@ def test_email(request):
     )
     return HttpResponse("Email test berhasil dikirim.")
 
+@login_required
+def export_pembayaran_excel(request):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Pembayaran SPP"
+
+    # Header
+    ws.append(['Nama Siswa', 'Kelas', 'Bulan', 'Jumlah Bayar', 'Status', 'Tanggal Bayar'])
+
+    # Data
+    pembayaran_list = PembayaranSPP.objects.all().order_by('siswa__nama')
+    for bayar in pembayaran_list:
+        ws.append([
+            bayar.siswa.nama,
+            bayar.siswa.kelas,
+            bayar.get_bulan_display(),
+            bayar.jumlah_bayar,
+            bayar.status_bayar,
+            bayar.tanggal_bayar.strftime("%d-%m-%Y") if bayar.tanggal_bayar else '-'
+        ])
+
+    # Simpan workbook ke dalam memory (BytesIO)
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    # Response download file
+    response = HttpResponse(
+        output,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=pembayaran_spp.xlsx'
+    return response

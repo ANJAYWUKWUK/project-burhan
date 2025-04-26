@@ -100,6 +100,7 @@ class HutangPiutang(models.Model):
 class Siswa(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     nama = models.CharField(max_length=100)
+    kelas = models.CharField(max_length=50)
     no_rekening = models.CharField(max_length=20)
 
     def __str__(self):

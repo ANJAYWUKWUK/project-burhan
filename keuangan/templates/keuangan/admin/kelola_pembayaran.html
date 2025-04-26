@@ -12,10 +12,48 @@
             animation: fadeIn 1s ease-in-out;
         }
 
-        h2 {
+        h2, h3 {
             text-align: center;
             color: white;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+        }
+
+        form {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        select, button, a.reset-link {
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        select {
+            background-color: white;
+            color: #333;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        a.reset-link {
+            background-color: #ffc107;
+            color: white;
+            text-decoration: none;
+        }
+
+        a.reset-link:hover {
+            background-color: #e0a800;
         }
 
         table {
@@ -44,21 +82,6 @@
             transition: 0.3s;
         }
 
-        button {
-            padding: 8px 15px;
-            background-color: #28a745;
-            border: none;
-            border-radius: 5px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        button:hover {
-            background-color: #218838;
-        }
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -73,6 +96,32 @@
 <body>
 
 <h2>Kelola Pembayaran SPP</h2>
+
+<form method="GET">
+    <label for="kelas" style="color: white; font-size: 18px;">Pilih Kelas:</label>
+    <select name="kelas" id="kelas" onchange="this.form.submit()">
+        <option value="">-- Pilih Kelas --</option>
+        {% for kelas in kelas_list %}
+            <option value="{{ kelas }}" {% if kelas == kelas_terpilih %}selected{% endif %}>{{ kelas }}</option>
+        {% endfor %}
+    </select>
+    
+    {% if kelas_terpilih %}
+    <input type="text" name="search_nama" placeholder="Cari Nama Siswa..." value="{{ search_nama }}" style="margin-left: 10px; padding: 8px; border-radius: 5px; border: none;">
+    <button type="submit">Cari</button>
+    <a href="{% url 'kelola_pembayaran' %}" class="reset-link">Reset Filter</a>
+    {% endif %}
+</form>
+{% if pembayaran_list %}
+    <a href="{% url 'export_pembayaran_excel' %}?{% if kelas_terpilih %}kelas={{ kelas_terpilih }}{% endif %}" 
+       style="margin-top: 20px; display: inline-block; padding: 10px 20px; background: #ffc107; color: black; text-decoration: none; border-radius: 5px; font-weight: bold;">
+       📥 Export ke Excel
+    </a>
+{% endif %}
+
+{% if kelas_terpilih %}
+    <h3>Kelas: {{ kelas_terpilih }}</h3>
+{% endif %}
 
 <table>
     <thead>
@@ -112,6 +161,10 @@
                     ✅ Lunas
                 {% endif %}
             </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" style="text-align: center;">Tidak ada data pembayaran.</td>
         </tr>
         {% endfor %}
     </tbody>

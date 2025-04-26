@@ -2,10 +2,11 @@ from django.urls import path
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
+from .views import export_pembayaran_excel
 
 
 urlpatterns = [
-    path('accounts/login/', views.login_view, name='login'),
+    path('', views.login_view, name='login'),
     path('dashboard/', views.dashboard_redirect, name='dashboard_redirect'),
     path('dashboard/admin/', views.dashboard, name='dashboard_admin'),
     path('dashboard/siswa/', views.dashboard_siswa, name='dashboard_siswa'),
@@ -27,7 +28,8 @@ urlpatterns = [
     path('hapus-piutang/<int:id>/', views.hapus_piutang, name='hapus_piutang'),
     path('dashboard-admin/pembayaran/', views.kelola_pembayaran, name='kelola_pembayaran'),
     path('siswa/tagihan/', views.tagihan_spp, name='tagihan_spp'),
-    path('test-email/', views.test_email, name='test_email'),       
+    path('test-email/', views.test_email, name='test_email'),
+    path('export-pembayaran/', export_pembayaran_excel, name='export_pembayaran_excel'),       
 
 ]
 if settings.DEBUG:
