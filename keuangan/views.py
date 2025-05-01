@@ -274,21 +274,22 @@ def hapus_piutang(request, id):
 
 @login_required
 def kelola_pembayaran(request):
-    # Ambil daftar semua kelas unik
     kelas_list = Siswa.objects.values_list('kelas', flat=True).distinct()
 
     kelas_terpilih = request.GET.get('kelas')
+    siswa_id = request.GET.get('siswa_id')
     search_nama = request.GET.get('search_nama')
 
-    pembayaran_list = PembayaranSPP.objects.all()
+    pembayaran_list = None
+    siswa_list = []
+    siswa_terpilih = None
 
     if kelas_terpilih:
-        pembayaran_list = pembayaran_list.filter(siswa__kelas=kelas_terpilih)
+        siswa_list = Siswa.objects.filter(kelas=kelas_terpilih)
 
-    if search_nama:
-        pembayaran_list = pembayaran_list.filter(siswa__nama__icontains=search_nama)
-
-    pembayaran_list = pembayaran_list.order_by('siswa__nama', 'bulan')
+        if siswa_id:
+            siswa_terpilih = get_object_or_404(Siswa, id=siswa_id)
+            pembayaran_list = PembayaranSPP.objects.filter(siswa=siswa_terpilih).order_by('bulan')
 
     if request.method == 'POST':
         pembayaran_id = request.POST.get('pembayaran_id')
@@ -297,22 +298,30 @@ def kelola_pembayaran(request):
         pembayaran.status_bayar = 'lunas'
         pembayaran.save()
 
+        # redirect tetap jaga query string supaya tetap di halaman yang sama
         redirect_url = request.path
-        if kelas_terpilih or search_nama:
-            redirect_url += '?'
-            if kelas_terpilih:
-                redirect_url += f'kelas={kelas_terpilih}&'
-            if search_nama:
-                redirect_url += f'search_nama={search_nama}'
+        query_params = []
+        if kelas_terpilih:
+            query_params.append(f'kelas={kelas_terpilih}')
+        if siswa_id:
+            query_params.append(f'siswa_id={siswa_id}')
+        if search_nama:
+            query_params.append(f'search_nama={search_nama}')
+        if query_params:
+            redirect_url += '?' + '&'.join(query_params)
 
         return redirect(redirect_url)
 
     return render(request, 'keuangan/admin/kelola_pembayaran.html', {
-        'pembayaran_list': pembayaran_list,
         'kelas_list': kelas_list,
         'kelas_terpilih': kelas_terpilih,
+        'siswa_list': siswa_list,
+        'siswa_terpilih': siswa_terpilih,
+        'pembayaran_list': pembayaran_list,
         'search_nama': search_nama,
     })
+
+
 
 def is_siswa(user):
     return hasattr(user, 'siswa')

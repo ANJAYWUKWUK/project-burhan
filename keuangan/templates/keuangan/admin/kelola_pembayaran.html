@@ -97,78 +97,107 @@
 
 <h2>Kelola Pembayaran SPP</h2>
 
-<form method="GET">
-    <label for="kelas" style="color: white; font-size: 18px;">Pilih Kelas:</label>
-    <select name="kelas" id="kelas" onchange="this.form.submit()">
-        <option value="">-- Pilih Kelas --</option>
-        {% for kelas in kelas_list %}
-            <option value="{{ kelas }}" {% if kelas == kelas_terpilih %}selected{% endif %}>{{ kelas }}</option>
-        {% endfor %}
-    </select>
-    
-    {% if kelas_terpilih %}
-    <input type="text" name="search_nama" placeholder="Cari Nama Siswa..." value="{{ search_nama }}" style="margin-left: 10px; padding: 8px; border-radius: 5px; border: none;">
-    <button type="submit">Cari</button>
-    <a href="{% url 'kelola_pembayaran' %}" class="reset-link">Reset Filter</a>
-    {% endif %}
-</form>
-{% if pembayaran_list %}
-    <a href="{% url 'export_pembayaran_excel' %}?{% if kelas_terpilih %}kelas={{ kelas_terpilih }}{% endif %}" 
-       style="margin-top: 20px; display: inline-block; padding: 10px 20px; background: #ffc107; color: black; text-decoration: none; border-radius: 5px; font-weight: bold;">
-       📥 Export ke Excel
-    </a>
-{% endif %}
-
-{% if kelas_terpilih %}
-    <h3>Kelas: {{ kelas_terpilih }}</h3>
-{% endif %}
-
+<!-- PILIH KELAS -->
 <table>
     <thead>
         <tr>
-            <th>Nama Siswa</th>
-            <th>Bulan</th>
-            <th>Jumlah</th>
-            <th>Status</th>
-            <th>Tanggal Bayar</th>
-            <th>Bukti</th>
-            <th>Aksi</th>
+            <th>Pilih Kelas</th>
         </tr>
     </thead>
     <tbody>
-        {% for bayar in pembayaran_list %}
+        {% for kelas in kelas_list %}
         <tr>
-            <td>{{ bayar.siswa.nama }}</td>
-            <td>{{ bayar.get_bulan_display }}</td>
-            <td>Rp{{ bayar.jumlah_bayar }}</td>
-            <td>{{ bayar.status_bayar }}</td>
-            <td>{{ bayar.tanggal_bayar|default:"-" }}</td>
             <td>
-                {% if bayar.bukti_pembayaran %}
-                    <a href="{{ bayar.bukti_pembayaran.url }}" target="_blank">Lihat</a>
-                {% else %}
-                    Belum Ada
-                {% endif %}
-            </td>
-            <td>
-                {% if bayar.status_bayar == 'belum lunas' %}
-                <form method="POST">
-                    {% csrf_token %}
-                    <input type="hidden" name="pembayaran_id" value="{{ bayar.id }}">
-                    <button type="submit">Tandai Lunas</button>
-                </form>
-                {% else %}
-                    ✅ Lunas
-                {% endif %}
+                <a href="?kelas={{ kelas }}" class="kelas-link">{{ kelas }}</a>
             </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="7" style="text-align: center;">Tidak ada data pembayaran.</td>
+            <td>Tidak ada kelas tersedia.</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+
+{% if kelas_terpilih %}
+    <h3>Kelas: {{ kelas_terpilih }}</h3>
+
+    <!-- PILIH SISWA -->
+    <table>
+        <thead>
+            <tr>
+                <th>Pilih Siswa</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for siswa in siswa_list %}
+            <tr>
+                <td>
+                    <a href="?kelas={{ kelas_terpilih }}&siswa_id={{ siswa.id }}" class="kelas-link">{{ siswa.nama }}</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td>Belum ada siswa di kelas ini.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+
+<!-- TABEL PEMBAYARAN SETELAH PILIH SISWA -->
+{% if pembayaran_list %}
+    <h3>Pembayaran Siswa: {{ siswa_terpilih.nama }}</h3>
+
+    <a href="{% url 'export_pembayaran_excel' %}?kelas={{ kelas_terpilih }}&siswa_id={{ siswa_terpilih.id }}" class="export-link">
+        📥 Export ke Excel
+    </a>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Bulan</th>
+                <th>Jumlah</th>
+                <th>Status</th>
+                <th>Tanggal Bayar</th>
+                <th>Bukti</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bayar in pembayaran_list %}
+            <tr>
+                <td>{{ bayar.get_bulan_display }}</td>
+                <td>Rp{{ bayar.jumlah_bayar }}</td>
+                <td>{{ bayar.status_bayar }}</td>
+                <td>{{ bayar.tanggal_bayar|default:"-" }}</td>
+                <td>
+                    {% if bayar.bukti_pembayaran %}
+                        <a href="{{ bayar.bukti_pembayaran.url }}" target="_blank">Lihat</a>
+                    {% else %}
+                        Belum Ada
+                    {% endif %}
+                </td>
+                <td>
+                    {% if bayar.status_bayar == 'belum lunas' %}
+                    <form method="POST" style="margin: 0;">
+                        {% csrf_token %}
+                        <input type="hidden" name="pembayaran_id" value="{{ bayar.id }}">
+                        <button type="submit">Tandai Lunas</button>
+                    </form>
+                    {% else %}
+                        ✅ Lunas
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">Tidak ada data pembayaran.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
 
 </body>
 </html>
