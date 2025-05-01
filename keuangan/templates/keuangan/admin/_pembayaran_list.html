@@ -1,0 +1,55 @@
+{% if siswa %}
+<h3 style="color: white;">Data Pembayaran SPP - {{ siswa.nama }} (Kelas {{ siswa.kelas }})</h3>
+
+<a href="{% url 'export_pembayaran_excel_by_siswa' siswa_id=siswa.id %}" 
+   style="margin: 15px 0; display: inline-block; padding: 10px 20px; background: #ffc107; color: black; text-decoration: none; border-radius: 5px; font-weight: bold;">
+   📥 Export ke Excel
+</a>
+
+<table>
+    <thead>
+        <tr>
+            <th>Bulan</th>
+            <th>Jumlah</th>
+            <th>Status</th>
+            <th>Tanggal Bayar</th>
+            <th>Bukti</th>
+            <th>Aksi</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for bayar in pembayaran_list %}
+        <tr>
+            <td>{{ bayar.get_bulan_display }}</td>
+            <td>Rp{{ bayar.jumlah_bayar }}</td>
+            <td>{{ bayar.status_bayar }}</td>
+            <td>{{ bayar.tanggal_bayar|default:"-" }}</td>
+            <td>
+                {% if bayar.bukti_pembayaran %}
+                    <a href="{{ bayar.bukti_pembayaran.url }}" target="_blank">Lihat</a>
+                {% else %}
+                    Belum Ada
+                {% endif %}
+            </td>
+            <td>
+                {% if bayar.status_bayar == 'belum lunas' %}
+                <form method="POST" action="{% url 'tandai_lunas' %}" style="margin: 0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="pembayaran_id" value="{{ bayar.id }}">
+                    <button type="submit" style="padding: 6px 12px; border: none; background: #28a745; color: white; border-radius: 4px;">Tandai Lunas</button>
+                </form>
+                {% else %}
+                    ✅ Lunas
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" style="text-align: center;">Tidak ada data pembayaran untuk siswa ini.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p style="color: white;">Silakan pilih siswa terlebih dahulu untuk melihat data pembayaran.</p>
+{% endif %}

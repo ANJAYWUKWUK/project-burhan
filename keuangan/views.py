@@ -1,7 +1,7 @@
 from django.db import models 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .models import Bank, Transaksi, Hutang, Piutang, Kategori, HutangPiutang,PembayaranSPP, Siswa
+from .models import Bank, Transaksi, Hutang, Piutang, Kategori, HutangPiutang,PembayaranSPP, Siswa, LaporanKeuangan
 from .forms import TransaksiForm, HutangForm, PiutangForm, BankForm, KategoriForm, HutangPiutangForm,BuktiPembayaranForm
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
@@ -17,6 +17,7 @@ from django.core.mail import send_mail
 from django.http import HttpResponse
 import openpyxl
 from io import BytesIO
+from .functions import generate_tagihan_spp
 
 def login_view(request):
     if request.method == 'POST':
@@ -111,7 +112,7 @@ def tambah_transaksi(request):
         form = TransaksiForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('dashboard')  # Kembali ke dashboard setelah transaksi ditambahkan
+            return redirect('dashboard_admin')  # Kembali ke dashboard setelah transaksi ditambahkan
     else:
         form = TransaksiForm()
 
@@ -335,6 +336,10 @@ def tagihan_spp(request):
             pembayaran.status = 'pending'  # optional: kalau lo ada field status
             form.save()
 
+             # Update laporan keuangan
+            laporan = LaporanKeuangan.objects.latest('tanggal')
+            laporan.update_pemasukan(pembayaran.jumlah_bayar)
+
             send_mail(
                 subject=f'Bukti Pembayaran SPP Masuk - {pembayaran.siswa.nama}',
                 message=f'Siswa {pembayaran.siswa.nama} telah mengupload bukti pembayaran untuk bulan {pembayaran.bulan}. Jumlah yang dibayar: {pembayaran.jumlah_bayar}.',
@@ -408,3 +413,8 @@ def daftar_siswa(request):
         return redirect('daftar_siswa')  # ganti dengan nama URL kamu
 
     return render(request, 'keuangan/admin/daftar_siswa.html', {'siswa_list': siswa_list})
+
+def generate_tagihan(request, siswa_id):
+    siswa = Siswa.objects.get(id=siswa_id)
+    generate_tagihan_spp(siswa)
+    return redirect('siswa_detail', siswa_id=siswa.id)

@@ -129,4 +129,16 @@ class Pembayaran(models.Model):
         return f'{self.siswa.username} - {self.jumlah_bayar}'
 # models.py
 
+class LaporanKeuangan(models.Model):
+    tanggal = models.DateField(auto_now_add=True)
+    pemasukan = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    pengeluaran = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    saldo = models.DecimalField(max_digits=15, decimal_places=2, default=0)
 
+    def update_pemasukan(self, jumlah):
+        self.pemasukan += jumlah
+        self.saldo += jumlah
+        self.save()
+
+    def __str__(self):
+        return f"Laporan Keuangan {self.tanggal}"

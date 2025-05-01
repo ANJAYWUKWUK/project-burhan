@@ -5,6 +5,8 @@ from django.dispatch import receiver
 from keuangan.models import PembayaranSPP, Pembayaran
 from django.core.mail import send_mail
 from django.conf import settings
+from .models import Siswa
+from .functions import generate_tagihan_spp 
 
 @receiver(post_migrate)
 def create_user_roles(sender, **kwargs):
@@ -40,3 +42,8 @@ def kirim_notifikasi_admin(sender, instance, created, **kwargs):
             [admin_email],
             fail_silently=False,
         )
+
+@receiver(post_save, sender=Siswa)
+def buat_tagihan_siswa(sender, instance, created, **kwargs):
+    if created:
+        generate_tagihan_spp(instance)

@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Bank, Hutang, Kategori, Piutang, Transaksi, Siswa,PembayaranSPP
+from .models import Bank, Hutang, Kategori, Piutang, Transaksi, Siswa,PembayaranSPP, LaporanKeuangan
+from .functions import generate_tagihan_spp
 
 @admin.register(Bank)
 class BankAdmin(admin.ModelAdmin):
@@ -30,7 +31,7 @@ class TransaksiAdmin(admin.ModelAdmin):
     list_filter = ('tanggal', 'jenis', 'kategori')
 
 class PembayaranSPPAdmin(admin.ModelAdmin):
-    list_display = ('siswa', 'bulan', 'jumlah_bayar', 'status_bayar', 'tanggal_bayar', 'bukti_pembayaran')
+    list_display = ('id','siswa', 'bulan', 'jumlah_bayar', 'status_bayar', 'tanggal_bayar', 'bukti_pembayaran')
     list_filter = ('bulan', 'status_bayar')  # Filter berdasarkan bulan dan status bayar
     search_fields = ('siswa__nama', 'bulan')  # Search berdasarkan nama siswa dan bulan
     list_editable = ('status_bayar',)  # Bisa langsung edit status bayar dari list view
@@ -62,8 +63,18 @@ class SiswaAdmin(admin.ModelAdmin):
             '4B': '5B',
             '5A': '6A',
             '5B': '6B',
-            # Tambahin kalau ada kelas lain
+            # Tambahkan kelas lain jika ada
         }
-        return kelas_mapping.get(kelas_sekarang, kelas_sekarang)  # Kalau tidak ketemu, tetapin kelas lama
+        return kelas_mapping.get(kelas_sekarang, kelas_sekarang)  # Default: tetap kelas lama
 
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if not change:  # Jika siswa baru p
+            generate_tagihan_spp(obj)
 # Bisa juga pakai admin.site.register(Bank), admin.site.register(Transaksi), dll.
+
+@admin.register(LaporanKeuangan)
+class LaporanKeuanganAdmin(admin.ModelAdmin):
+    list_display = ('tanggal', 'pemasukan', 'pengeluaran', 'saldo')
+    search_fields = ('tanggal',)
+    ordering = ('-tanggal',)
