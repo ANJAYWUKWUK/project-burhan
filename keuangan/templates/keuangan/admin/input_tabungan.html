@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Tabungan Siswa</title>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <style>
+        /* Sama seperti styling yang sudah dibahas sebelumnya */
+        body {
+          font-family: 'Arial', sans-serif;
+          background-color: #f5f5f5;
+          margin: 0;
+          padding: 20px;
+          color: #333;
+        }
+
+        form {
+          background-color: #ffffff;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          max-width: 700px;
+          margin: 0 auto;
+        }
+
+        label {
+          font-size: 14px;
+          color: #555;
+          margin-bottom: 8px;
+          display: block;
+        }
+
+        input[type="date"], select {
+          width: 100%;
+          padding: 10px;
+          margin: 8px 0;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-size: 14px;
+          box-sizing: border-box;
+        }
+
+        table {
+          width: 100%;
+          margin-top: 20px;
+          border-collapse: collapse;
+        }
+
+        table th, table td {
+          padding: 12px;
+          text-align: left;
+          border-bottom: 1px solid #ddd;
+        }
+
+        table th {
+          background-color: #f8f8f8;
+          color: #333;
+          font-weight: bold;
+        }
+
+        table td {
+          color: #555;
+        }
+
+        button {
+          background-color: #4CAF50;
+          color: white;
+          border: none;
+          padding: 12px 20px;
+          font-size: 16px;
+          cursor: pointer;
+          border-radius: 5px;
+          transition: background-color 0.3s ease;
+          margin-top: 20px;
+        }
+
+        button:hover {
+          background-color: #45a049;
+        }
+
+        input[type="checkbox"] {
+          margin: 0;
+        }
+
+        @media (max-width: 600px) {
+          form {
+            padding: 15px;
+          }
+
+          button {
+            padding: 10px 15px;
+          }
+
+          input[type="date"], select {
+            font-size: 12px;
+          }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Input Tabungan Siswa</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+        
+        <label for="tanggal">Pilih Tanggal:</label>
+        <input type="text" id="datepicker" name="tanggal" required>
+      
+        <label for="kelas">Pilih Kelas:</label>
+        <select name="kelas" onchange="this.form.submit()">
+          <option value="">-- Pilih Kelas --</option>
+          {% for k in kelas_list %}
+            <option value="{{ k }}" {% if selected_kelas == k %}selected{% endif %}>{{ k }}</option>
+          {% endfor %}
+        </select>
+
+        {% if siswa_list %}
+        <table>
+            <thead>
+                <tr><th>Nama Siswa</th><th>Hadir</th></tr>
+            </thead>
+            <tbody>
+                {% for siswa in siswa_list %}
+                <tr>
+                    <td>{{ siswa.nama }}</td>
+                    <td><input type="checkbox" name="hadir" value="{{ siswa.id }}"></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <button type="submit" name="simpan">Simpan</button>
+        {% endif %}
+    </form>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            // Mengaktifkan datepicker untuk input tanggal
+            $("#datepicker").datepicker({
+                dateFormat: "yy-mm-dd"  // Format tanggal: Tahun-Bulan-Hari
+            });
+        });
+    </script>
+
+</body>
+</html>

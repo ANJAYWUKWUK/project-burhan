@@ -1,7 +1,7 @@
 from django.db import models 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .models import Bank, Transaksi, Hutang, Piutang, Kategori, HutangPiutang,PembayaranSPP, Siswa, LaporanKeuangan
+from .models import Bank, Transaksi, Hutang, Piutang, Kategori, HutangPiutang,PembayaranSPP, Siswa, LaporanKeuangan, TabunganSiswa  
 from .forms import TransaksiForm, HutangForm, PiutangForm, BankForm, KategoriForm, HutangPiutangForm,BuktiPembayaranForm
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
@@ -18,6 +18,8 @@ from django.http import HttpResponse
 import openpyxl
 from io import BytesIO
 from .functions import generate_tagihan_spp
+from datetime import datetime
+from django.core.files.storage import FileSystemStorage
 
 def login_view(request):
     if request.method == 'POST':
@@ -427,3 +429,99 @@ def generate_tagihan(request, siswa_id):
     siswa = Siswa.objects.get(id=siswa_id)
     generate_tagihan_spp(siswa)
     return redirect('siswa_detail', siswa_id=siswa.id)
+
+def input_tabungan(request):
+    kelas_list = Siswa.objects.values_list('kelas', flat=True).distinct()
+    selected_kelas = request.POST.get('kelas')
+    siswa_list = Siswa.objects.filter(kelas=selected_kelas) if selected_kelas else []
+
+    if request.method == 'POST' and 'simpan' in request.POST:
+        tanggal = request.POST.get('tanggal')
+        hadir_ids = request.POST.getlist('hadir')
+
+        for siswa_id in hadir_ids:
+            siswa = Siswa.objects.get(id=siswa_id)
+            TabunganSiswa.objects.get_or_create(
+                siswa=siswa,
+                tanggal=tanggal,
+                defaults={'nominal': 5000}  # ✅ Sesuai dengan model
+            )
+        messages.success(request, "Tabungan berhasil disimpan.")
+        return redirect('input_tabungan')
+
+    return render(request, 'keuangan/admin/input_tabungan.html', {
+        'kelas_list': kelas_list,
+        'selected_kelas': selected_kelas,
+        'siswa_list': siswa_list,
+    })
+
+def riwayat_tabungan(request):
+    kelas_list = Siswa.objects.values_list('kelas', flat=True).distinct()
+    selected_kelas = request.GET.get('kelas')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    siswa_tabungan = TabunganSiswa.objects.all()
+
+    # Filter berdasarkan kelas jika ada
+    if selected_kelas:
+        siswa_tabungan = siswa_tabungan.filter(siswa__kelas=selected_kelas)
+
+    # Filter berdasarkan rentang tanggal jika ada
+    if start_date and end_date:
+        siswa_tabungan = siswa_tabungan.filter(tanggal__range=[start_date, end_date])
+
+    # Mengambil data siswa dan total tabungannya
+    siswa_tabungan = siswa_tabungan.values('siswa__nama', 'siswa').annotate(total_tabungan=Sum('nominal'))
+
+    return render(request, 'keuangan/admin/riwayat_tabungan.html', {
+        'kelas_list': kelas_list,
+        'selected_kelas': selected_kelas,
+        'siswa_tabungan': siswa_tabungan,
+    })
+
+def penarikan_tabungan(request):
+    siswa_tabungan = TabunganSiswa.objects.select_related('siswa') \
+        .values('siswa__id', 'siswa__nama') \
+        .annotate(total_tabungan=Sum('nominal'))
+
+    if request.method == 'POST':
+        tanggal_penarikan = request.POST.get('tanggal_penarikan')
+        siswa_ditarik_ids = request.POST.getlist('siswa_ditarik')
+
+        for siswa_id in siswa_ditarik_ids:
+            if not siswa_id.isdigit():
+                continue  # skip id kosong atau tidak valid
+
+            try:
+                siswa = Siswa.objects.get(id=siswa_id)
+            except Siswa.DoesNotExist:
+                continue
+
+            nominal_str = request.POST.get(f'nominal_{siswa_id}', '0').replace('.', '').replace(',', '')
+            nominal = int(nominal_str) if nominal_str.isdigit() else 0
+
+            bukti_penarikan = request.FILES.get(f'bukti_{siswa_id}')
+            bukti_filename = None
+
+            if bukti_penarikan:
+                fs = FileSystemStorage()
+                bukti_filename = fs.save(bukti_penarikan.name, bukti_penarikan)
+
+            # Simpan ke model PenarikanTabungan jika kamu punya model tersebut
+            # PenarikanTabungan.objects.create(
+            #     siswa=siswa,
+            #     nominal=nominal,
+            #     tanggal=tanggal_penarikan,
+            #     bukti=bukti_filename
+            # )
+
+            # Update tabungan siswa jika perlu
+            # TabunganSiswa.objects.filter(siswa=siswa).update(tarik=True)
+
+        messages.success(request, "Penarikan berhasil disimpan.")
+        return redirect('penarikan_tabungan')
+
+    return render(request, 'keuangan/admin/penarikan_tabungan.html', {
+        'siswa_tabungan': siswa_tabungan
+    })

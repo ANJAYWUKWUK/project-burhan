@@ -30,7 +30,9 @@ urlpatterns = [
     path('siswa/tagihan/', views.tagihan_spp, name='tagihan_spp'),
     path('test-email/', views.test_email, name='test_email'),
     path('export-pembayaran/', export_pembayaran_excel, name='export_pembayaran_excel'),       
-
+    path('tabungan/input/', views.input_tabungan, name='input_tabungan'),
+    path('tabungan/riwayat/', views.riwayat_tabungan, name='riwayat_tabungan'),
+    path('tabungan/penarikan/', views.penarikan_tabungan, name='penarikan_tabungan'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

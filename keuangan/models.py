@@ -142,3 +142,23 @@ class LaporanKeuangan(models.Model):
 
     def __str__(self):
         return f"Laporan Keuangan {self.tanggal}"
+
+class TabunganSiswa(models.Model):
+    siswa = models.ForeignKey(Siswa, on_delete=models.CASCADE)
+    tanggal = models.DateField()  # wajib ditambahkan karena dipakai di unique_together
+    nominal = models.IntegerField(default=5000)
+    tarik = models.BooleanField(default=False)
+    class Meta:
+        unique_together = ('siswa', 'tanggal')  # siswa hanya bisa menabung 1x per hari
+
+    def __str__(self):
+        return f"{self.siswa.nama} - {self.tanggal} - {self.nominal}"
+
+class PenarikanTabungan(models.Model):
+    siswa = models.ForeignKey(Siswa, on_delete=models.CASCADE)
+    tanggal_penarikan = models.DateField(auto_now_add=True)
+    jumlah_ditarik = models.IntegerField()
+    keterangan = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.siswa.nama} - Rp{self.jumlah_ditarik} - {self.tanggal_penarikan}"

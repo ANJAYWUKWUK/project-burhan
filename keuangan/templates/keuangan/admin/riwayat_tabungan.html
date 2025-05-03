@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Tabungan Siswa</title>
+    <style>
+        /* Mengatur latar belakang dan font halaman */
+        body {
+          font-family: Arial, sans-serif;
+          background-color: #f4f4f9;
+          margin: 0;
+          padding: 20px;
+        }
+
+        /* Menambahkan padding dan warna latar belakang pada form */
+        form {
+          background-color: #ffffff;
+          border-radius: 8px;
+          padding: 20px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          margin-bottom: 20px;
+        }
+
+        /* Label form dan input field */
+        label {
+          font-size: 14px;
+          margin-bottom: 6px;
+          display: block;
+          color: #333;
+        }
+
+        /* Styling select box */
+        select, input[type="date"] {
+          width: 100%;
+          padding: 8px;
+          margin: 8px 0;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          box-sizing: border-box;
+        }
+
+        /* Styling button */
+        button {
+          background-color: #4CAF50;
+          color: white;
+          border: none;
+          padding: 10px 15px;
+          cursor: pointer;
+          font-size: 14px;
+          border-radius: 4px;
+          transition: background-color 0.3s;
+        }
+
+        button:hover {
+          background-color: #45a049;
+        }
+
+        /* Styling untuk tabel */
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+        }
+
+        table th, table td {
+          padding: 12px;
+          text-align: left;
+          border-bottom: 1px solid #ddd;
+        }
+
+        table th {
+          background-color: #f4f4f9;
+          font-weight: bold;
+          color: #333;
+        }
+
+        table td {
+          color: #555;
+        }
+
+        /* Styling untuk tabel row yang ganjil dan genap */
+        table tr:nth-child(even) {
+          background-color: #f9f9f9;
+        }
+
+        /* Responsif: Tabel menjadi lebih kecil di layar sempit */
+        @media screen and (max-width: 600px) {
+          table {
+            font-size: 12px;
+          }
+          select, input[type="date"] {
+            font-size: 12px;
+          }
+          button {
+            font-size: 12px;
+            padding: 8px 12px;
+          }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Riwayat Tabungan Siswa</h1>
+
+    <form method="GET">
+        <label>Pilih Kelas:</label>
+        <select name="kelas">
+            <option value="">-- Pilih Kelas --</option>
+            {% for k in kelas_list %}
+                <option value="{{ k }}" {% if selected_kelas == k %}selected{% endif %}>{{ k }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Pilih Rentang Tanggal:</label>
+        <input type="date" name="start_date">
+        <input type="date" name="end_date">
+
+        <button type="submit">Filter</button>
+    </form>
+
+    {% if siswa_tabungan %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nama Siswa</th>
+                <th>Total Tabungan</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tabungan in siswa_tabungan %}
+            <tr>
+                <td>{{ tabungan.siswa__nama }}</td>
+                <td>Rp {{ tabungan.total_tabungan }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>Tidak ada data tabungan yang tersedia.</p>
+    {% endif %}
+
+</body>
+</html>
