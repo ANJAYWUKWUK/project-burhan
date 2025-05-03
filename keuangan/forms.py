@@ -1,5 +1,5 @@
 from django import forms
-from .models import Transaksi, Hutang, Piutang, Bank, Kategori, PembayaranSPP
+from .models import Transaksi, Hutang, Piutang, Bank, Kategori, PembayaranSPP,Siswa
 
 class TransaksiForm(forms.ModelForm):
     class Meta:
@@ -68,3 +68,15 @@ class BuktiPembayaranForm(forms.ModelForm):
     class Meta:
         model = PembayaranSPP
         fields = ['bukti_pembayaran']
+        
+class PilihKelasForm(forms.Form):
+    kelas = forms.ChoiceField(choices=[], label='Pilih Kelas')
+
+    def __init__(self, *args, **kwargs):
+        super(PilihKelasForm, self).__init__(*args, **kwargs)
+        kelas_choices = Siswa.objects.values_list('kelas', 'kelas').distinct()
+        self.fields['kelas'].choices = kelas_choices
+
+class PilihBulanForm(forms.Form):
+    bulan = forms.ChoiceField(choices=[(str(i), str(i)) for i in range(1, 13)], label="Pilih Bulan")
+    tahun = forms.ChoiceField(choices=[(str(i), str(i)) for i in range(2024, 2031)], label="Pilih Tahun")

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Bank, Hutang, Kategori, Piutang, Transaksi, Siswa,PembayaranSPP, LaporanKeuangan
+from .models import Bank, Hutang, Kategori, Piutang, Transaksi, Siswa,PembayaranSPP, LaporanKeuangan,TabunganSiswa, PenarikanTabungan
 from .functions import generate_tagihan_spp
 
 @admin.register(Bank)
@@ -78,3 +78,17 @@ class LaporanKeuanganAdmin(admin.ModelAdmin):
     list_display = ('tanggal', 'pemasukan', 'pengeluaran', 'saldo')
     search_fields = ('tanggal',)
     ordering = ('-tanggal',)
+    
+@admin.register(TabunganSiswa)
+class TabunganSiswaAdmin(admin.ModelAdmin):
+    list_display = ('siswa', 'tanggal', 'nominal', 'tarik')
+    list_filter = ('tarik', 'tanggal')
+    search_fields = ('siswa__nama',)
+    ordering = ('-tanggal',)
+
+@admin.register(PenarikanTabungan)
+class PenarikanTabunganAdmin(admin.ModelAdmin):
+    list_display = ('siswa', 'tanggal_penarikan', 'jumlah_ditarik', 'keterangan')
+    list_filter = ('tanggal_penarikan',)
+    search_fields = ('siswa__nama',)
+    ordering = ('-tanggal_penarikan',)
