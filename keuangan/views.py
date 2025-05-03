@@ -440,6 +440,7 @@ def input_tabungan(request):
     selected_kelas = None
     selected_bulan = None
     selected_tahun = None
+    checked_data = {}
 
     if request.method == 'POST':
         selected_kelas = request.POST.get('kelas')
@@ -447,12 +448,20 @@ def input_tabungan(request):
         selected_tahun = int(request.POST.get('tahun'))
 
         siswa_list = Siswa.objects.filter(kelas=selected_kelas)
+
+        # Hanya ambil hari kerja (Senin–Jumat)
         _, last_day = calendar.monthrange(selected_tahun, selected_bulan)
-        tanggal_list = list(range(1, last_day + 1))
+        tanggal_list = [
+            day for day in range(1, last_day + 1)
+            if datetime(selected_tahun, selected_bulan, day).weekday() < 5  # 0=Senin, ..., 4=Jumat
+        ]
+
+        for siswa in siswa_list:
+            checked_data[siswa.id] = request.POST.getlist(f'tanggal_{siswa.id}')
 
         if 'simpan' in request.POST:
             for siswa in siswa_list:
-                tanggal_terpilih = request.POST.getlist(f'tanggal_{siswa.id}')
+                tanggal_terpilih = checked_data[siswa.id]
                 for tanggal in tanggal_terpilih:
                     tanggal_full = datetime(selected_tahun, selected_bulan, int(tanggal)).date()
 
@@ -466,6 +475,16 @@ def input_tabungan(request):
             messages.success(request, "Tabungan berhasil disimpan.")
             return redirect('input_tabungan')
 
+        else:
+            # Bukan proses simpan, ambil data tabungan dari database
+            for siswa in siswa_list:
+                tabungan_qs = TabunganSiswa.objects.filter(
+                    siswa=siswa,
+                    tanggal__month=selected_bulan,
+                    tanggal__year=selected_tahun
+                )
+                checked_data[siswa.id] = [t.tanggal.day for t in tabungan_qs]
+
     context = {
         'kelas_form': kelas_form,
         'bulan_form': bulan_form,
@@ -473,36 +492,35 @@ def input_tabungan(request):
         'tanggal_list': tanggal_list,
         'selected_bulan': selected_bulan,
         'selected_tahun': selected_tahun,
+        'checked_data': checked_data,
     }
     return render(request, 'keuangan/admin/input_tabungan.html', context)
 
-
 def riwayat_tabungan(request):
-    kelas_list = Siswa.objects.values_list('kelas', flat=True).distinct()
-    selected_kelas = request.GET.get('kelas')
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-
-    siswa_tabungan = TabunganSiswa.objects.all()
-
-    # Filter berdasarkan kelas jika ada
-    if selected_kelas:
-        siswa_tabungan = siswa_tabungan.filter(siswa__kelas=selected_kelas)
-
-    # Filter berdasarkan rentang tanggal jika ada
+    siswa_list = Siswa.objects.all()  # Ambil daftar siswa
+    kelas_list = Siswa.objects.values('kelas').distinct()  # Daftar kelas yang ada
+    start_date = request.GET.get('start_date', '')  # Tanggal mulai
+    end_date = request.GET.get('end_date', '')  # Tanggal akhir
+    selected_siswa = request.GET.get('siswa', '')  # Siswa yang dipilih
+    
+    # Query untuk filter berdasarkan tanggal
+    tabungan = TabunganSiswa.objects.all()
     if start_date and end_date:
-        siswa_tabungan = siswa_tabungan.filter(tanggal__range=[start_date, end_date])
-
-    # Mengambil data siswa dan total tabungannya
-    siswa_tabungan = siswa_tabungan.values('siswa__nama', 'siswa').annotate(total_tabungan=Sum('nominal'))
-
-    return render(request, 'keuangan/admin/riwayat_tabungan.html', {
+        tabungan = tabungan.filter(tanggal__range=[start_date, end_date])
+    
+    if selected_siswa:
+        tabungan = tabungan.filter(siswa__id=selected_siswa)
+    
+    context = {
+        'tabungan_list': tabungan,
+        'siswa_list': siswa_list,
         'kelas_list': kelas_list,
-        'selected_kelas': selected_kelas,
-        'siswa_tabungan': siswa_tabungan,
-    })
-
-from django.core.files.storage import FileSystemStorage  # jangan lupa import
+        'start_date': start_date,
+        'end_date': end_date,
+        'selected_siswa': selected_siswa,
+    }
+    
+    return render(request, 'keuangan/admin/riwayat_tabungan.html', context)
 
 def penarikan_tabungan(request):
     siswa_tabungan = TabunganSiswa.objects.select_related('siswa') \
