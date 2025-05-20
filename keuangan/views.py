@@ -462,10 +462,26 @@ def input_tabungan(request):
         if 'simpan' in request.POST:
             for siswa in siswa_list:
                 tanggal_terpilih = checked_data[siswa.id]
-                for tanggal in tanggal_terpilih:
-                    tanggal_full = datetime(selected_tahun, selected_bulan, int(tanggal)).date()
+                tanggal_terpilih_set = set(
+                    datetime(selected_tahun, selected_bulan, int(t)).date()
+                    for t in tanggal_terpilih
+                )
 
-                    # Cek apakah sudah ada tabungan di tanggal itu, kalau belum, buat
+                # Ambil semua tabungan siswa di bulan & tahun yg dipilih
+                existing_tabungan = TabunganSiswa.objects.filter(
+                    siswa=siswa,
+                    tanggal__month=selected_bulan,
+                    tanggal__year=selected_tahun
+                )
+
+                existing_tanggal_set = set(t.tanggal for t in existing_tabungan)
+
+                # Hapus tanggal yang sebelumnya ada tapi sekarang tidak dipilih
+                tanggal_dihapus = existing_tanggal_set - tanggal_terpilih_set
+                TabunganSiswa.objects.filter(siswa=siswa, tanggal__in=tanggal_dihapus).delete()
+
+                # Tambahkan tanggal yang baru dipilih dan belum ada
+                for tanggal_full in tanggal_terpilih_set:
                     TabunganSiswa.objects.get_or_create(
                         siswa=siswa,
                         tanggal=tanggal_full,
@@ -474,6 +490,7 @@ def input_tabungan(request):
 
             messages.success(request, "Tabungan berhasil disimpan.")
             return redirect('input_tabungan')
+
 
         else:
             # Bukan proses simpan, ambil data tabungan dari database
@@ -497,29 +514,45 @@ def input_tabungan(request):
     return render(request, 'keuangan/admin/input_tabungan.html', context)
 
 def riwayat_tabungan(request):
-    siswa_list = Siswa.objects.all()  # Ambil daftar siswa
-    kelas_list = Siswa.objects.values('kelas').distinct()  # Daftar kelas yang ada
-    start_date = request.GET.get('start_date', '')  # Tanggal mulai
-    end_date = request.GET.get('end_date', '')  # Tanggal akhir
-    selected_siswa = request.GET.get('siswa', '')  # Siswa yang dipilih
-    
-    # Query untuk filter berdasarkan tanggal
-    tabungan = TabunganSiswa.objects.all()
-    if start_date and end_date:
-        tabungan = tabungan.filter(tanggal__range=[start_date, end_date])
-    
-    if selected_siswa:
-        tabungan = tabungan.filter(siswa__id=selected_siswa)
-    
+    selected_kelas = request.GET.get('kelas', '')
+    selected_siswa = request.GET.get('siswa', '')
+    start_date = request.GET.get('start_date', '')
+    end_date = request.GET.get('end_date', '')
+
+    kelas_list = Siswa.objects.values('kelas').distinct()
+    siswa_list = Siswa.objects.all()
+    if selected_kelas:
+        siswa_list = siswa_list.filter(kelas=selected_kelas)
+
+    tabungan = TabunganSiswa.objects.none()
+    total_dict = {}
+
+    if selected_kelas and start_date and end_date:
+        tabungan = TabunganSiswa.objects.filter(
+            siswa__kelas=selected_kelas,
+            tanggal__range=[start_date, end_date]
+        )
+
+        if selected_siswa:
+            tabungan = tabungan.filter(siswa__id=selected_siswa)
+
+        total_tabungan = (
+            tabungan.values('siswa')
+            .annotate(total=Sum('nominal'))
+        )
+        total_dict = {item['siswa']: item['total'] for item in total_tabungan}
+
     context = {
-        'tabungan_list': tabungan,
+        'tabungan_list': tabungan.order_by('tanggal'),
         'siswa_list': siswa_list,
         'kelas_list': kelas_list,
         'start_date': start_date,
         'end_date': end_date,
+        'selected_kelas': selected_kelas,
         'selected_siswa': selected_siswa,
+        'total_tabungan': total_dict,
     }
-    
+
     return render(request, 'keuangan/admin/riwayat_tabungan.html', context)
 
 def penarikan_tabungan(request):
