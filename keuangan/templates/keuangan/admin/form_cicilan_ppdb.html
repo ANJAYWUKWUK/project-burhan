@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ judul }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<style>
+        body {
+            display: flex;
+        }
+        .sidebar {
+            width: 250px;
+            background: #6a0dad;
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+        }
+        .sidebar a:hover {
+            background: #1A252F;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+</style>
+
+<body>
+
+    <div class="sidebar">
+        <h4>SDIT BIRRUWATTAQWA</h4>
+        <p>Laporan Keuangan</p>
+       <a href="{% url 'kelola_pembayaran' %}">Kelola Pembayaran SPP</a>
+        <a href="{% url 'dsp_list' %}">Kelola Pembayaran DSP</a>
+        <a href="{% url 'ppdb_list' %}">Kelola Pembayaran PPDB </a>
+        <a href="{% url 'kelola_tabungan' %}">Kelola Tabungan</a>
+        <a href="#"> Kelola Laporan</a>
+        <a href="#">Logout</a>
+        <a href="{% url 'daftar_siswa' %}">Update</a>
+    </div>
+<div class="container mt-5">
+    <h2 class="mb-4">{{ judul }}</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Simpan</button>
+        <a href="{% url 'ppdb_detail' ppdb.id %}" class="btn btn-secondary">Kembali</a>
+    </form>
+</div>
+</body>
+</html>

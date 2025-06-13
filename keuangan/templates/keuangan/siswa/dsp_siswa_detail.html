@@ -1,0 +1,54 @@
+
+{% block content %}
+<h2>Status Pembayaran DSP Kamu</h2>
+
+<p><strong>Total Tagihan:</strong> Rp {{ dsp.total_tagihan }}</p>
+<p><strong>Total Terbayar:</strong> Rp {{ dsp.total_terbayar }}</p>
+<p><strong>Sisa Tagihan:</strong> Rp {{ dsp.sisa_tagihan }}</p>
+<p><strong>Status:</strong> {{ dsp.status }}</p>
+
+<h3>Riwayat Cicilan</h3>
+<table border="1" cellpadding="10">
+    <thead>
+        <tr>
+            <th>Tanggal</th>
+            <th>Jumlah</th>
+            <th>Bukti Pembayaran</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in cicilan_list %}
+        <tr>
+            <td>{{ c.tanggal }}</td>
+            <td>Rp {{ c.jumlah }}</td>
+            <td>
+                {% if c.bukti_pembayaran %}
+                    <a href="{{ c.bukti_pembayaran.url }}" target="_blank">Lihat</a>
+                {% else %}
+                    Tidak ada bukti
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3">Belum ada cicilan.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<hr>
+<h3>Tambah Cicilan DSP</h3>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label for="jumlah">Jumlah Bayar (Rp):</label><br>
+    <input type="number" name="jumlah" required><br><br>
+
+    <label for="bukti">Upload Bukti Pembayaran (Opsional):</label><br>
+    <input type="file" name="bukti"><br><br>
+
+    <button type="submit">Kirim Cicilan</button>
+</form>
+
+{% if pesan %}
+    <p style="color: green;">{{ pesan }}</p>
+{% endif %}
+{% endblock %}

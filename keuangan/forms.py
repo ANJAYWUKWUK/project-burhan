@@ -1,5 +1,5 @@
 from django import forms
-from .models import Transaksi, Hutang, Piutang, Bank, Kategori, PembayaranSPP,Siswa
+from .models import Transaksi, Hutang, Piutang, Bank, Kategori, PembayaranSPP,Siswa,DSP,DSPCicilan, PPDB, PPDBCicilan
 
 class TransaksiForm(forms.ModelForm):
     class Meta:
@@ -80,3 +80,34 @@ class PilihKelasForm(forms.Form):
 class PilihBulanForm(forms.Form):
     bulan = forms.ChoiceField(choices=[(str(i), str(i)) for i in range(1, 13)], label="Pilih Bulan")
     tahun = forms.ChoiceField(choices=[(str(i), str(i)) for i in range(2024, 2031)], label="Pilih Tahun")
+
+
+
+class DSPForm(forms.ModelForm):
+    class Meta:
+        model = DSP
+        fields = ['siswa', 'total_tagihan', 'tanggal_mulai', 'jatuh_tempo']
+        widgets = {
+            'tanggal_mulai': forms.DateInput(attrs={'type': 'date'}),
+            'jatuh_tempo': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+class DSPCicilanForm(forms.ModelForm):
+    class Meta:
+        model = DSPCicilan
+        fields = ['jumlah', 'bukti_pembayaran']
+        widgets = {
+            'jumlah': forms.NumberInput(attrs={'class': 'form-control'}),
+            'bukti_pembayaran': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+
+class PPDBForm(forms.ModelForm):
+    class Meta:
+        model = PPDB
+        fields = ['siswa', 'total_tagihan']
+
+class PPDBCicilanForm(forms.ModelForm):
+    class Meta:
+        model = PPDBCicilan
+        fields = ['jumlah', 'bukti_pembayaran']
+

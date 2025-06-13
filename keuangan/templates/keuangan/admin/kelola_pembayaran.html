@@ -4,200 +4,306 @@
     <meta charset="UTF-8">
     <title>Kelola Pembayaran SPP</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(to right, #00c6ff, #0072ff);
-            color: #333;
-            padding: 40px;
-            animation: fadeIn 1s ease-in-out;
-        }
+        * {
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    transition: all 0.3s ease;
+}
 
-        h2, h3 {
-            text-align: center;
-            color: white;
-            margin-bottom: 20px;
-        }
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f0f2f5;
+    color: #333;
+    display: flex;
+    min-height: 100vh;
+}
 
-        form {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+/* Sidebar */
+.sidebar {
+    width: 250px;
+    background: rgba(75, 0, 130, 0.95);
+    backdrop-filter: blur(6px);
+    color: white;
+    padding: 30px 20px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    box-shadow: 3px 0 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
 
-        select, button, a.reset-link {
-            padding: 8px 15px;
-            border-radius: 5px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            margin: 5px;
-        }
+.sidebar h2 {
+    font-size: 22px;
+    margin-bottom: 6px;
+}
 
-        select {
-            background-color: white;
-            color: #333;
-        }
+.sidebar p {
+    font-size: 13px;
+    margin-bottom: 25px;
+    color: #d4c5f9;
+}
 
-        button {
-            background-color: #28a745;
-            color: white;
-        }
+.sidebar a {
+    text-decoration: none;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 15px;
+    background-color: transparent;
+}
 
-        button:hover {
-            background-color: #218838;
-        }
+.sidebar a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
 
-        a.reset-link {
-            background-color: #ffc107;
-            color: white;
-            text-decoration: none;
-        }
+/* Content */
+.main-content {
+    flex-grow: 1;
+    padding: 40px;
+}
 
-        a.reset-link:hover {
-            background-color: #e0a800;
-        }
+/* Headings */
+h1, h3 {
+    color: #4B0082;
+    margin-bottom: 20px;
+}
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-            animation: slideUp 1s ease-in-out;
-        }
+/* Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    margin: 25px 0;
+}
 
-        thead {
-            background-color: #0072ff;
-            color: white;
-        }
+thead {
+    background-color: #4B0082;
+    color: #fff;
+}
 
-        th, td {
-            padding: 15px;
-            text-align: center;
-            border-bottom: 1px solid #ddd;
-        }
+th, td {
+    padding: 15px 18px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+}
 
-        tr:hover {
-            background-color: #f5f5f5;
-            transition: 0.3s;
-        }
+tbody tr:hover {
+    background-color: #f8f8f8;
+}
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+a.kelas-link {
+    display: inline-block;
+    padding: 8px 14px;
+    background-color: #6c63ff;
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+}
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(50px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+a.kelas-link:hover {
+    background-color: #574fd6;
+}
+
+/* Buttons & Links */
+button,
+.reset-link,
+.export-link {
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    margin: 6px 0;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+button {
+    background-color: #28a745;
+    color: white;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+.reset-link {
+    background-color: #ffc107;
+    color: white;
+    text-decoration: none;
+}
+
+.reset-link:hover {
+    background-color: #e0a800;
+}
+
+.export-link {
+    background-color: #17a2b8;
+    color: white;
+    text-decoration: none;
+    display: inline-block;
+    margin-bottom: 20px;
+}
+
+.export-link:hover {
+    background-color: #138496;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+
+    .main-content {
+        padding: 20px;
+    }
+
+    table th, table td {
+        font-size: 13px;
+        padding: 10px;
+    }
+
+    .sidebar a {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+}
+
     </style>
 </head>
 <body>
 
-<h2>Kelola Pembayaran SPP</h2>
+<div class="sidebar">
+    <h2>SDIT BIRRUWATTAQWA</h2>
+    <p>Laporan Keuangan</p>
+       <a href="{% url 'kelola_pembayaran' %}">Kelola Pembayaran SPP</a>
+        <a href="{% url 'dsp_list' %}">Kelola Pembayaran DSP</a>
+        <a href="{% url 'ppdb_list' %}">Kelola Pembayaran PPDB </a>
+        <a href="{% url 'kelola_tabungan' %}">Kelola Tabungan</a>
+        <a href="#"> Kelola Laporan</a>
+        <a href="#">Logout</a>
+        <a href="{% url 'daftar_siswa' %}">Update</a>
+</div>
 
-<!-- PILIH KELAS -->
-<table>
-    <thead>
-        <tr>
-            <th>Pilih Kelas</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for kelas in kelas_list %}
-        <tr>
-            <td>
-                <a href="?kelas={{ kelas }}" class="kelas-link">{{ kelas }}</a>
-            </td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td>Tidak ada kelas tersedia.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="main-content">
+    <h1>Kelola Pembayaran SPP</h1>
 
-{% if kelas_terpilih %}
-    <h3>Kelas: {{ kelas_terpilih }}</h3>
-
-    <!-- PILIH SISWA -->
+    <!-- PILIH KELAS -->
     <table>
         <thead>
             <tr>
-                <th>Pilih Siswa</th>
+                <th>Pilih Kelas</th>
             </tr>
         </thead>
         <tbody>
-            {% for siswa in siswa_list %}
+            {% for kelas in kelas_list %}
             <tr>
                 <td>
-                    <a href="?kelas={{ kelas_terpilih }}&siswa_id={{ siswa.id }}" class="kelas-link">{{ siswa.nama }}</a>
+                    <a href="?kelas={{ kelas }}" class="kelas-link">{{ kelas }}</a>
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td>Belum ada siswa di kelas ini.</td>
+                <td>Tidak ada kelas tersedia.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-{% endif %}
 
-<!-- TABEL PEMBAYARAN SETELAH PILIH SISWA -->
-{% if pembayaran_list %}
-    <h3>Pembayaran Siswa: {{ siswa_terpilih.nama }}</h3>
+    {% if kelas_terpilih %}
+        <h3>Kelas: {{ kelas_terpilih }}</h3>
 
-    <a href="{% url 'export_pembayaran_excel' %}?kelas={{ kelas_terpilih }}&siswa_id={{ siswa_terpilih.id }}" class="export-link">
-        📥 Export ke Excel
-    </a>
+        <!-- PILIH SISWA -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Pilih Siswa</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for siswa in siswa_list %}
+                <tr>
+                    <td>
+                        <a href="?kelas={{ kelas_terpilih }}&siswa_id={{ siswa.id }}" class="kelas-link">{{ siswa.nama }}</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td>Belum ada siswa di kelas ini.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
 
-    <table>
-        <thead>
-            <tr>
-                <th>Bulan</th>
-                <th>Jumlah</th>
-                <th>Status</th>
-                <th>Tanggal Bayar</th>
-                <th>Bukti</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for bayar in pembayaran_list %}
-            <tr>
-                <td>{{ bayar.get_bulan_display }}</td>
-                <td>Rp{{ bayar.jumlah_bayar }}</td>
-                <td>{{ bayar.status_bayar }}</td>
-                <td>{{ bayar.tanggal_bayar|default:"-" }}</td>
-                <td>
-                    {% if bayar.bukti_pembayaran %}
-                        <a href="{{ bayar.bukti_pembayaran.url }}" target="_blank">Lihat</a>
-                    {% else %}
-                        Belum Ada
-                    {% endif %}
-                </td>
-                <td>
-                    {% if bayar.status_bayar == 'belum lunas' %}
-                    <form method="POST" style="margin: 0;">
-                        {% csrf_token %}
-                        <input type="hidden" name="pembayaran_id" value="{{ bayar.id }}">
-                        <button type="submit">Tandai Lunas</button>
-                    </form>
-                    {% else %}
-                        ✅ Lunas
-                    {% endif %}
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="6">Tidak ada data pembayaran.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-{% endif %}
+    {% if pembayaran_list %}
+        <h1>Pembayaran Siswa: {{ siswa_terpilih.nama }}</h1>
+
+        <a href="{% url 'export_pembayaran_excel' %}?kelas={{ kelas_terpilih }}&siswa_id={{ siswa_terpilih.id }}" class="export-link">
+            📥 Export ke Excel
+        </a>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Bulan</th>
+                    <th>Jumlah</th>
+                    <th>Status</th>
+                    <th>Tanggal Bayar</th>
+                    <th>Bukti</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bayar in pembayaran_list %}
+                <tr>
+                    <td>{{ bayar.get_bulan_display }}</td>
+                    <td>Rp{{ bayar.jumlah_bayar }}</td>
+                    <td>{{ bayar.status_bayar }}</td>
+                    <td>{{ bayar.tanggal_bayar|default:"-" }}</td>
+                    <td>
+                        {% if bayar.bukti_pembayaran %}
+                            <a href="{{ bayar.bukti_pembayaran.url }}" target="_blank">Lihat</a>
+                        {% else %}
+                            Belum Ada
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if bayar.status_bayar == 'belum lunas' %}
+                        <form method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="pembayaran_id" value="{{ bayar.id }}">
+                            <button type="submit">Tandai Lunas</button>
+                        </form>
+                        {% else %}
+                            ✅ Lunas
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">Tidak ada data pembayaran.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</div>
 
 </body>
 </html>

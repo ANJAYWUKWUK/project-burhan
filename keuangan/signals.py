@@ -1,4 +1,4 @@
-from django.db.models.signals import post_migrate, post_save
+from django.db.models.signals import post_migrate, post_save, post_delete
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.dispatch import receiver
@@ -6,7 +6,168 @@ from keuangan.models import PembayaranSPP, Pembayaran
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import Siswa
+from decimal import Decimal
 from .functions import generate_tagihan_spp 
+from django.utils import timezone
+from .models import (
+    LaporanKeuangan, PembayaranSPP, DSPCicilan, PPDBCicilan,
+    TabunganSiswa, PenarikanTabungan
+)
+
+@receiver(post_save, sender=PembayaranSPP)
+def update_laporan_keuangan_on_spp_save(sender, instance, created, **kwargs):
+    if instance.status_bayar == 'lunas' and not instance.is_posted_to_laporan_keuangan:
+        today = instance.tanggal_bayar if instance.tanggal_bayar else timezone.now().date()
+        laporan, _ = LaporanKeuangan.objects.get_or_create(tanggal=today)
+        
+        laporan.pemasukan += instance.jumlah_bayar
+        laporan.saldo = laporan.pemasukan - laporan.pengeluaran
+        laporan.save()
+        
+        # Tandai pembayaran ini sudah diposting
+        instance.is_posted_to_laporan_keuangan = True
+        instance.save(update_fields=['is_posted_to_laporan_keuangan']) # Hindari looping rekursif
+
+@receiver(post_delete, sender=PembayaranSPP)
+def update_laporan_keuangan_on_spp_delete(sender, instance, **kwargs):
+    if instance.status_bayar == 'lunas' and instance.is_posted_to_laporan_keuangan:
+        today = instance.tanggal_bayar if instance.tanggal_bayar else timezone.now().date()
+        try:
+            laporan = LaporanKeuangan.objects.get(tanggal=today)
+            laporan.pemasukan -= instance.jumlah_bayar
+            laporan.saldo = laporan.pemasukan - laporan.pengeluaran
+            laporan.save()
+        except LaporanKeuangan.DoesNotExist:
+            pass # Laporan untuk hari itu mungkin sudah tidak ada, abaikan
+
+# Tambahkan signal untuk model Pembayaran (jika masih digunakan)
+@receiver(post_save, sender=Pembayaran)
+def update_laporan_keuangan_on_pembayaran_save(sender, instance, created, **kwargs):
+    if instance.status_bayar and not instance.is_posted_to_laporan_keuangan: # Jika status_bayar True
+        today = instance.tanggal_bayar if instance.tanggal_bayar else timezone.now().date()
+        laporan, _ = LaporanKeuangan.objects.get_or_create(tanggal=today)
+        
+        laporan.pemasukan += instance.jumlah_bayar
+        laporan.saldo = laporan.pemasukan - laporan.pengeluaran
+        laporan.save()
+        
+        instance.is_posted_to_laporan_keuangan = True
+        instance.save(update_fields=['is_posted_to_laporan_keuangan'])
+
+@receiver(post_delete, sender=Pembayaran)
+def update_laporan_keuangan_on_pembayaran_delete(sender, instance, **kwargs):
+    if instance.status_bayar and instance.is_posted_to_laporan_keuangan:
+        today = instance.tanggal_bayar if instance.tanggal_bayar else timezone.now().date()
+        try:
+            laporan = LaporanKeuangan.objects.get(tanggal=today)
+            laporan.pemasukan -= instance.jumlah_bayar
+            laporan.saldo = laporan.pemasukan - laporan.pengeluaran
+            laporan.save()
+        except LaporanKeuangan.DoesNotExist:
+            pass
+
+@receiver(post_save, sender=DSPCicilan)
+def update_laporan_keuangan_on_dspcicilan_save(sender, instance, created, **kwargs):
+    if not instance.is_posted_to_laporan_keuangan: # Anggap setiap cicilan DSP langsung masuk
+        today = instance.tanggal if instance.tanggal else timezone.now().date()
+        laporan, _ = LaporanKeuangan.objects.get_or_create(tanggal=today)
+        
+        laporan.pemasukan += instance.jumlah
+        laporan.saldo = laporan.pemasukan - laporan.pengeluaran
+        laporan.save()
+        
+        instance.is_posted_to_laporan_keuangan = True
+        instance.save(update_fields=['is_posted_to_laporan_keuangan'])
+
+@receiver(post_delete, sender=DSPCicilan)
+def update_laporan_keuangan_on_dspcicilan_delete(sender, instance, **kwargs):
+    if instance.is_posted_to_laporan_keuangan:
+        today = instance.tanggal if instance.tanggal else timezone.now().date()
+        try:
+            laporan = LaporanKeuangan.objects.get(tanggal=today)
+            laporan.pemasukan -= instance.jumlah
+            laporan.saldo = laporan.pemasukan - laporan.pengeluaran
+            laporan.save()
+        except LaporanKeuangan.DoesNotExist:
+            pass
+
+@receiver(post_save, sender=PPDBCicilan)
+def update_laporan_keuangan_on_ppdbcicilan_save(sender, instance, created, **kwargs):
+    if not instance.is_posted_to_laporan_keuangan: # Anggap setiap cicilan PPDB langsung masuk
+        today = instance.tanggal if instance.tanggal else timezone.now().date()
+        laporan, _ = LaporanKeuangan.objects.get_or_create(tanggal=today)
+        
+        laporan.pemasukan += instance.jumlah
+        laporan.saldo = laporan.pemasukan - laporan.pengeluaran
+        laporan.save()
+        
+        instance.is_posted_to_laporan_keuangan = True
+        instance.save(update_fields=['is_posted_to_laporan_keuangan'])
+
+@receiver(post_delete, sender=PPDBCicilan)
+def update_laporan_keuangan_on_ppdbcicilan_delete(sender, instance, **kwargs):
+    if instance.is_posted_to_laporan_keuangan:
+        today = instance.tanggal if instance.tanggal else timezone.now().date()
+        try:
+            laporan = LaporanKeuangan.objects.get(tanggal=today)
+            laporan.pemasukan -= instance.jumlah
+            laporan.saldo = laporan.pemasukan - laporan.pengeluaran
+            laporan.save()
+        except LaporanKeuangan.DoesNotExist:
+            pass
+
+@receiver(post_save, sender=TabunganSiswa)
+def update_laporan_keuangan_on_tabungansiswa_save(sender, instance, created, **kwargs):
+    if not instance.tarik and not instance.is_posted_to_laporan_keuangan: # Hanya untuk setoran
+        today = instance.tanggal if instance.tanggal else timezone.now().date()
+        laporan, _ = LaporanKeuangan.objects.get_or_create(tanggal=today)
+        
+        laporan.pemasukan += Decimal(instance.nominal) # Pastikan tipe Decimal
+        laporan.saldo = laporan.pemasukan - laporan.pengeluaran
+        laporan.save()
+        
+        instance.is_posted_to_laporan_keuangan = True
+        instance.save(update_fields=['is_posted_to_laporan_keuangan'])
+
+@receiver(post_delete, sender=TabunganSiswa)
+def update_laporan_keuangan_on_tabungansiswa_delete(sender, instance, **kwargs):
+    if not instance.tarik and instance.is_posted_to_laporan_keuangan:
+        today = instance.tanggal if instance.tanggal else timezone.now().date()
+        try:
+            laporan = LaporanKeuangan.objects.get(tanggal=today)
+            laporan.pemasukan -= Decimal(instance.nominal)
+            laporan.saldo = laporan.pemasukan - laporan.pengeluaran
+            laporan.save()
+        except LaporanKeuangan.DoesNotExist:
+            pass
+
+# --- Signal untuk PENGELUARAN ---
+
+@receiver(post_save, sender=PenarikanTabungan)
+def update_laporan_keuangan_on_penarikan_save(sender, instance, created, **kwargs):
+    if not instance.is_posted_to_laporan_keuangan:
+        today = instance.tanggal_penarikan if instance.tanggal_penarikan else timezone.now().date()
+        laporan, _ = LaporanKeuangan.objects.get_or_create(tanggal=today)
+        
+        laporan.pengeluaran += Decimal(instance.jumlah_ditarik) # Pastikan tipe Decimal
+        laporan.saldo = laporan.pemasukan - laporan.pengeluaran
+        laporan.save()
+        
+        instance.is_posted_to_laporan_keuangan = True
+        instance.save(update_fields=['is_posted_to_laporan_keuangan'])
+
+@receiver(post_delete, sender=PenarikanTabungan)
+def update_laporan_keuangan_on_penarikan_delete(sender, instance, **kwargs):
+    if instance.is_posted_to_laporan_keuangan:
+        today = instance.tanggal_penarikan if instance.tanggal_penarikan else timezone.now().date()
+        try:
+            laporan = LaporanKeuangan.objects.get(tanggal=today)
+            laporan.pengeluaran -= Decimal(instance.jumlah_ditarik)
+            laporan.saldo = laporan.pemasukan - laporan.pengeluaran
+            laporan.save()
+        except LaporanKeuangan.DoesNotExist:
+            pass
+
 
 @receiver(post_migrate)
 def create_user_roles(sender, **kwargs):

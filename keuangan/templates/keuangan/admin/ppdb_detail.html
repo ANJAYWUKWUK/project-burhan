@@ -1,0 +1,110 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detail PPDB</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<style>
+        body {
+            display: flex;
+        }
+        .sidebar {
+            width: 250px;
+            background: #6a0dad;
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+        }
+        .sidebar a:hover {
+            background: #1A252F;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+</style>
+<body>
+
+    <div class="sidebar">
+        <h4>SDIT BIRRUWATTAQWA</h4>
+        <p>Laporan Keuangan</p>
+       <a href="{% url 'kelola_pembayaran' %}">Kelola Pembayaran SPP</a>
+        <a href="{% url 'dsp_list' %}">Kelola Pembayaran DSP</a>
+        <a href="{% url 'ppdb_list' %}">Kelola Pembayaran PPDB </a>
+        <a href="{% url 'kelola_tabungan' %}">Kelola Tabungan</a>
+        <a href="#"> Kelola Laporan</a>
+        <a href="#">Logout</a>
+        <a href="{% url 'daftar_siswa' %}">Update</a>
+    </div>
+<div class="container mt-4">
+    <h2 class="mb-4">Detail Cicilan PPDB untuk <strong>{{ ppdb.siswa.nama }}</strong></h2>
+
+    <ul class="list-group mb-4">
+        <li class="list-group-item"><strong>Total Tagihan:</strong> Rp {{ ppdb.total_tagihan|intcomma }}</li>
+        <li class="list-group-item"><strong>Total Dibayar:</strong> Rp {{ ppdb.total_terbayar|intcomma }}</li>
+        <li class="list-group-item"><strong>Sisa Tagihan:</strong> Rp {{ ppdb.sisa_tagihan|intcomma }}</li>
+        <li class="list-group-item"><strong>Status:</strong>
+            {% if ppdb.status == "Lunas" %}
+                <span class="badge bg-success">Lunas</span>
+            {% else %}
+                <span class="badge bg-warning text-dark">Belum Lunas</span>
+            {% endif %}
+        </li>
+    </ul>
+
+    {% if ppdb.status != "Lunas" %}
+        <a href="{% url 'ppdb_cicilan_tambah' ppdb.id %}" class="btn btn-sm btn-primary mb-3">+ Tambah Cicilan</a>
+        {% if ppdb.total_terbayar >= ppdb.total_tagihan %}
+        <form method="post" action="{% url 'validasi_ppdb_lunas' ppdb.id %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success btn-sm mb-3">Validasi Lunas</button>
+        </form>
+        {% endif %}
+    {% endif %}
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>No</th>
+                    <th>Tanggal</th>
+                    <th>Jumlah</th>
+                    <th>Bukti Pembayaran</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cicilan in cicilan_list %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ cicilan.tanggal }}</td>
+                    <td>Rp {{ cicilan.jumlah|intcomma }}</td>
+                    <td>
+                        {% if cicilan.bukti_pembayaran %}
+                            <a href="{{ cicilan.bukti_pembayaran.url }}" target="_blank" class="btn btn-sm btn-info">Lihat</a>
+                        {% else %}
+                            <span class="text-muted">Tidak ada</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'ppdb_cicilan_edit' ppdb.id cicilan.id %}" class="btn btn-sm btn-warning">Edit</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted">Belum ada cicilan.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

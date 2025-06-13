@@ -1,166 +1,175 @@
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <title>Penarikan Tabungan Siswa</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-.table-container {
-    max-width: 1200px;
-    margin: 30px auto;
-    padding: 20px;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            display: flex;
+        }
 
-h2 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #333;
-    font-size: 2rem;
-}
+        .sidebar {
+            width: 250px;
+            background: #6a0dad;
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
 
-label {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #444;
-}
+        .sidebar a:hover {
+            background: #1A252F;
+        }
 
-input[type="date"],
-input[type="file"],
-input[type="number"],
-button {
-    padding: 10px 14px;
-    font-size: 1rem;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    outline: none;
-    width: 100%;
-}
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background: #f9f9f9;
+        }
 
-input[type="date"]:focus,
-input[type="file"]:focus,
-input[type="number"]:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
-}
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 1000px;
+            margin: auto;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
 
-button {
-    background-color: #007bff;
-    color: white;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    padding: 12px 24px;
-    align-self: flex-start;
-}
+        h2 {
+            margin-top: 0;
+        }
 
-button:hover {
-    background-color: #0056b3;
-}
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
 
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-}
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
 
-.table th,
-.table td {
-    padding: 14px 18px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
+        th {
+            background: #f0f0f0;
+        }
 
-.table th {
-    background-color: #f1f1f1;
-    font-weight: bold;
-    color: #555;
-    font-size: 1rem;
-}
+        .form-control {
+            padding: 6px;
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
 
-.table td input[type="checkbox"],
-.table td input[type="number"],
-.table td input[type="file"] {
-    width: 100%;
-}
+        .submit-btn {
+            margin-top: 20px;
+            padding: 12px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
 
-@media screen and (max-width: 768px) {
-    .table-container {
-        padding: 15px;
-    }
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
 
-    h2 {
-        font-size: 1.5rem;
-    }
-
-    .table th, .table td {
-        font-size: 0.9rem;
-        padding: 10px 12px;
-    }
-
-    button {
-        width: 100%;
-        padding: 10px 20px;
-    }
-}
-
+        input[type="number"] {
+            width: 100%;
+            padding: 6px;
+            box-sizing: border-box;
+        }
     </style>
+
+    <script>
+        function toggleNominalInput(checkbox, siswaId) {
+            const nominalInput = document.getElementById('nominal_' + siswaId);
+            nominalInput.disabled = !checkbox.checked;
+            if (!checkbox.checked) {
+                nominalInput.value = '';
+            }
+        }
+    </script>
 </head>
 <body>
-    <div class="table-container">
-        <h2>Penarikan Tabungan Siswa</h2>
-        <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <label for="tanggal_penarikan">Pilih Tanggal Penarikan:</label>
-            <input type="date" name="tanggal_penarikan" id="tanggal_penarikan" required>
 
-            <table class="table">
+<div class="sidebar">
+    <h3>SDIT BIRRUWATTAQWA</h3>
+    <a href="{% url 'kelola_pembayaran' %}">Kelola Pembayaran</a>
+    <a href="{% url 'input_tabungan' %}">Input Tabungan</a>
+    <a href="{% url 'riwayat_tabungan' %}">Riwayat Tabungan</a>
+    <a href="{% url 'penarikan_tabungan' %}">Penarikan Tabungan</a>
+    <a href="{% url 'dsp_list' %}">Manajemen DSP</a>
+    <a href="{% url 'ppdb_list' %}">PPDB</a>
+</div>
+
+<div class="main-content">
+    <div class="container">
+        <h2>Penarikan Tabungan Siswa</h2>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="tanggal_penarikan"><strong>Tanggal Penarikan:</strong></label>
+                <input type="date" name="tanggal_penarikan" required class="form-control">
+            </div>
+
+            <table>
                 <thead>
                     <tr>
+                        <th>Pilih</th>
                         <th>Nama Siswa</th>
                         <th>Total Tabungan</th>
                         <th>Nominal Penarikan</th>
-                        <th>Tarik?</th>
-                        <th>Bukti Penarikan</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for tabungan in siswa_tabungan %}
+                    {% for siswa in siswa_tabungan %}
                         <tr>
-                            <td>{{ tabungan.siswa__nama }}</td>
-                            <td>Rp {{ tabungan.total_tabungan }}</td>
                             <td>
-                                <input type="number" name="nominal_{{ tabungan.siswa__id }}" min="0" required>
+                                <input type="checkbox" name="siswa_ditarik" value="{{ siswa.siswa__id }}"
+                                       onchange="toggleNominalInput(this, '{{ siswa.siswa__id }}')">
                             </td>
+                            <td>{{ siswa.siswa__nama }}</td>
+                            <td>Rp {{ siswa.total_tabungan|intcomma }}</td>
                             <td>
-                                <input type="checkbox" name="siswa_ditarik" value="{{ tabungan.siswa__id }}">
-                            </td>
-                            <td>
-                                <input type="file" name="bukti_{{ tabungan.siswa__id }}">
+                                <input type="number" name="nominal_{{ siswa.siswa__id }}"
+                                       id="nominal_{{ siswa.siswa__id }}"
+                                       class="form-control" min="1" step="1000" disabled>
                             </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
 
-            <button type="submit">Proses Penarikan</button>
+            <button type="submit" class="submit-btn">Simpan Penarikan</button>
         </form>
-    </div>
 
-    <!-- Tambahkan library intcomma untuk format angka -->
-    {% load humanize %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li style="color: {% if message.tags == 'error' %}red{% else %}green{% endif %};">
+                        {{ message }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+</div>
+
 </body>
 </html>

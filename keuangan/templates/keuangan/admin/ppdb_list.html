@@ -1,0 +1,94 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Daftar Tagihan PPDB</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<style>
+        body {
+            display: flex;
+        }
+        .sidebar {
+            width: 250px;
+            background: #6a0dad;
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+        }
+        .sidebar a:hover {
+            background: #1A252F;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+</style>
+<body>
+
+    <div class="sidebar">
+        <h4>SDIT BIRRUWATTAQWA</h4>
+        <p>Laporan Keuangan</p>
+       <a href="{% url 'kelola_pembayaran' %}">Kelola Pembayaran SPP</a>
+        <a href="{% url 'dsp_list' %}">Kelola Pembayaran DSP</a>
+        <a href="{% url 'ppdb_list' %}">Kelola Pembayaran PPDB </a>
+        <a href="{% url 'kelola_tabungan' %}">Kelola Tabungan</a>
+        <a href="#"> Kelola Laporan</a>
+        <a href="#">Logout</a>
+        <a href="{% url 'daftar_siswa' %}">Update</a>
+    </div>
+    
+<div class="container mt-4">
+    <h2 class="mb-4">Daftar Tagihan PPDB</h2>
+    <a href="{% url 'ppdb_tambah' %}" class="btn btn-primary mb-3">+ Tambah Tagihan</a>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>No</th>
+                    <th>Nama Siswa</th>
+                    <th>Total Tagihan</th>
+                    <th>Total Dibayar</th>
+                    <th>Sisa Tagihan</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ppdb in ppdbs %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ ppdb.siswa.nama }}</td>
+                    <td>Rp {{ ppdb.total_tagihan|intcomma }}</td>
+                    <td>Rp {{ ppdb.total_terbayar|intcomma }}</td>
+                    <td>Rp {{ ppdb.sisa_tagihan|intcomma }}</td>
+                    <td>
+                        {% if ppdb.status == "Lunas" %}
+                            <span class="badge bg-success">Lunas</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Belum Lunas</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'ppdb_detail' ppdb.id %}" class="btn btn-info btn-sm">Detail</a>
+                        <a href="{% url 'ppdb_edit' ppdb.id %}" class="btn btn-warning btn-sm">Edit</a>
+                        <a href="{% url 'ppdb_delete' ppdb.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Yakin ingin menghapus?')">Hapus</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted">Belum ada data tagihan PPDB.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+
+
+{% block content %}
+<h2>Detail Cicilan - {{ dsp.siswa.nama }}</h2>
+
+<p>Total Tagihan: Rp {{ dsp.total_tagihan }}</p>
+<p>Total Terbayar: Rp {{ dsp.total_terbayar }}</p>
+<p>Sisa Tagihan: Rp {{ dsp.sisa_tagihan }}</p>
+<p>Status: {{ dsp.status }}</p>
+
+<h3>Riwayat Cicilan</h3>
+<table border="1" cellpadding="10">
+    <thead>
+        <tr>
+            <th>Tanggal</th>
+            <th>Jumlah</th>
+            <th>Bukti Pembayaran</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in cicilan_list %}
+        <tr>
+            <td>{{ c.tanggal }}</td>
+            <td>Rp {{ c.jumlah }}</td>
+            <td>
+                {% if c.bukti_pembayaran %}
+                    <a href="{{ c.bukti_pembayaran.url }}" target="_blank">Lihat</a>
+                {% else %}
+                    Tidak ada bukti
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3">Belum ada cicilan.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'dsp_list_admin' %}">← Kembali ke Daftar</a>
+{% endblock %}
