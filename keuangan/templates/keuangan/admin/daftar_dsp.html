@@ -18,21 +18,26 @@
   <style>
     body {
       background-color: #f1f5f9;
-      margin: 0;
-      padding: 0;
     }
 
     .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100vh;
       width: 250px;
-      background-color: #6a0dad;
+      background: #6a0dad;
       color: white;
+      min-height: 100vh;
       padding: 20px;
-      overflow-y: auto;
-      z-index: 50;
+      position: fixed;
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      display: block;
+      padding: 10px;
+    }
+
+    .sidebar a:hover {
+      background: #1A252F;
     }
 
     .main-content {
@@ -40,7 +45,6 @@
       padding: 2rem 1rem;
     }
 
-    /* Responsive - collapse sidebar on small screen */
     @media (max-width: 768px) {
       .sidebar {
         position: relative;
@@ -53,7 +57,6 @@
       }
     }
 
-    /* Scrollbar Styling */
     ::-webkit-scrollbar {
       width: 10px;
     }
@@ -67,7 +70,8 @@
       background-color: #94a3b8;
     }
 
-    input:focus, select:focus {
+    input:focus,
+    select:focus {
       outline: none;
       border-color: #3b82f6;
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
@@ -78,17 +82,16 @@
 
   <!-- Sidebar -->
   <div class="sidebar">
-    <h4 class="text-xl font-bold mb-1">SDIT BIRRUWATTAQWA</h4>
-    <p class="mb-4 text-sm">Laporan Keuangan</p>
-    <nav class="flex flex-col space-y-2">
-       <a href="{% url 'kelola_pembayaran' %}">Kelola Pembayaran SPP</a>
-        <a href="{% url 'dsp_list' %}">Kelola Pembayaran DSP</a>
-        <a href="{% url 'ppdb_list' %}">Kelola Pembayaran PPDB </a>
-        <a href="{% url 'kelola_tabungan' %}">Kelola Tabungan</a>
-        <a href="#"> Kelola Laporan</a>
-        <a href="#">Logout</a>
-        <a href="{% url 'daftar_siswa' %}">Update</a>
-    </nav>
+    <h4>SDIT BIRRUWATTAQWA</h4>
+    <p>Laporan Keuangan</p>
+    <a href="{% url 'dashboard_redirect' %}">dashboard</a>
+    <a href="{% url 'kelola_pembayaran' %}">Kelola Pembayaran SPP</a>
+    <a href="{% url 'dsp_list' %}">Kelola Pembayaran DSP</a>
+    <a href="{% url 'ppdb_list' %}">Kelola Pembayaran PPDB </a>
+    <a href="{% url 'kelola_tabungan' %}">Kelola Tabungan</a>
+    <a href="{% url 'laporan_keuangan' %}"> Kelola Laporan</a>
+    <a href="{% url 'logout' %}">Logout</a>    <a href="#">Logout</a>
+    <a href="{% url 'daftar_siswa' %}">Update</a>
   </div>
 
   <!-- Main Content -->
@@ -124,7 +127,7 @@
     </div>
 
     <div class="overflow-x-auto shadow rounded-lg" data-aos="fade-up">
-      <table class="w-full text-sm text-left text-gray-700 bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden" id="dspTable">
+      <table class="w-full text-sm text-left text-gray-700 bg-white border border-gray-200 rounded-lg shadow-md" id="dspTable">
         <thead class="text-xs text-white uppercase bg-gray-800">
           <tr>
             <th class="px-4 py-3 text-center">No</th>
@@ -139,7 +142,7 @@
         </thead>
         <tbody>
           {% for dsp in dsps %}
-            <tr class="border-b hover:bg-blue-50 transition duration-200 ease-in-out" data-aos="fade-up" data-nama="{{ dsp.siswa.nama|lower }}" data-status="{{ dsp.status|lower }}">
+            <tr class="border-b hover:bg-blue-50 transition" data-aos="fade-up" data-nama="{{ dsp.siswa.nama|lower }}" data-status="{{ dsp.status|lower }}">
               <td class="px-4 py-3 text-center">{{ forloop.counter }}</td>
               <td class="px-4 py-3">{{ dsp.siswa.nama }}</td>
               <td class="px-4 py-3">{{ dsp.siswa.kelas }}</td>
@@ -186,10 +189,8 @@
       tableRows.forEach(row => {
         const nama = row.dataset.nama;
         const status = row.dataset.status;
-
         const matchesNama = nama.includes(searchValue);
         const matchesStatus = !statusValue || status === statusValue;
-
         row.style.display = matchesNama && matchesStatus ? '' : 'none';
       });
     }

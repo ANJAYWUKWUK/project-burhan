@@ -3,16 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Tagihan SPP</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(to right, #e0eafc, #cfdef3);
-            padding: 40px;
             margin: 0;
             animation: fadeIn 1s ease-in;
+            display: flex;
         }
-    
+
+        .sidebar {
+            width: 250px;
+            background: #6a0dad;
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        .sidebar h4 {
+            margin-bottom: 10px;
+        }
+
+        .sidebar p {
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .sidebar a:hover {
+            background: #1A252F;
+        }
+
+        .content {
+            margin-left: 270px;
+            padding: 40px;
+            flex: 1;
+        }
+
         h2 {
             text-align: center;
             color: #2c3e50;
@@ -20,7 +58,7 @@
             margin-bottom: 30px;
             animation: slideDown 1s ease-out;
         }
-    
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -30,52 +68,43 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             animation: fadeInUp 0.8s ease-out;
         }
-    
+
         th, td {
             padding: 15px 20px;
             text-align: center;
             font-size: 1em;
         }
-    
+
         thead {
             background-color: #3498db;
             color: white;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-    
-        tbody tr {
-            transition: background-color 0.3s ease;
-        }
-    
+
         tbody tr:hover {
             background-color: #f0f9ff;
         }
-    
+
         td a {
             color: #2980b9;
             text-decoration: none;
             font-weight: bold;
             transition: color 0.3s;
         }
-    
+
         td a:hover {
             color: #1abc9c;
         }
-    
+
         input[type="file"] {
             padding: 6px;
             font-size: 0.9em;
             border-radius: 6px;
             border: 1px solid #ccc;
             background-color: #f9f9f9;
-            transition: border-color 0.3s ease;
         }
-    
-        input[type="file"]:hover {
-            border-color: #3498db;
-        }
-    
+
         button {
             margin-top: 6px;
             padding: 8px 14px;
@@ -87,50 +116,52 @@
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.2s;
         }
-    
+
         button:hover {
             background-color: #27ae60;
             transform: scale(1.05);
         }
-    
+
         /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
-    
+
         @keyframes slideDown {
-            from {
-                transform: translateY(-20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
-    
+
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-    
+
         /* Responsive */
         @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                position: relative;
+                width: 100%;
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
             table, thead, tbody, th, td, tr {
                 display: block;
             }
-    
+
             thead {
                 display: none;
             }
-    
+
             tr {
                 margin-bottom: 15px;
                 background-color: #fff;
@@ -138,13 +169,13 @@
                 box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
                 padding: 12px;
             }
-    
+
             td {
                 text-align: left;
                 padding: 10px 15px;
                 position: relative;
             }
-    
+
             td:before {
                 content: attr(data-label);
                 position: absolute;
@@ -154,7 +185,7 @@
                 text-transform: uppercase;
                 color: #888;
             }
-    
+
             td input[type="file"], td button {
                 width: 100%;
             }
@@ -162,52 +193,63 @@
     </style>
 </head>
 <body>
+    <div class="sidebar">
+        <h4>SDIT BIRRUWATTAQWA</h4>
+        <p>Laporan Keuangan</p>
+        <a href="#">Dashboard</a>
+        <a href="{% url 'tagihan_spp' %}">Pembayaran SPP</a>
+        <a href="{% url 'dsp_siswa_detail' %}">Pembayaran DSP</a>
+        <a href="{% url 'siswa_ppdb_detail' %}">Pembayaran ppdb</a>
+        <a href="{% url 'tabungan_siswa' %}"> Riwayat Tabungan</a>
+        <a href="{% url 'logout' %}">Logout</a>
+    </div>
 
-{% block content %}
-<h2>Tagihan SPP {{ request.user.username }}</h2>
+    <div class="content">
+        {% block content %}
+        <h2>Tagihan SPP {{ request.user.username }}</h2>
 
-<table border="1" cellpadding="8">
-    <thead>
-        <tr>
-            <th>Bulan</th>
-            <th>Jumlah</th>
-            <th>Status</th>
-            <th>Tanggal Bayar</th>
-            <th>Bukti Pembayaran</th>
-            <th>Upload Bukti</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for bayar in pembayaran_list %}
-        <tr>
-            <td>{{ bayar.get_bulan_display }}</td>
-            <td>Rp{{ bayar.jumlah_bayar }}</td>
-            <td>{{ bayar.status_bayar }}</td>
-            <td>{{ bayar.tanggal_bayar }}</td>
-            <td>
-                {% if bayar.bukti_pembayaran %}
-                    <a href="{{ bayar.bukti_pembayaran.url }}" target="_blank">Lihat</a>
-                {% else %}
-                    Belum Ada
-                {% endif %}
-            </td>
-            <td>
-                {% if bayar.status_bayar == 'belum lunas' %}
-                <form method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <input type="hidden" name="pembayaran_id" value="{{ bayar.id }}">
-                    {{ form.bukti_pembayaran }}
-                    <button type="submit">Upload</button>
-                </form>
-                {% else %}
-                    -
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endblock %}
-
+        <table>
+            <thead>
+                <tr>
+                    <th>Bulan</th>
+                    <th>Jumlah</th>
+                    <th>Status</th>
+                    <th>Tanggal Bayar</th>
+                    <th>Bukti Pembayaran</th>
+                    <th>Upload Bukti</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bayar in pembayaran_list %}
+                <tr>
+                    <td data-label="Bulan">{{ bayar.get_bulan_display }}</td>
+                    <td data-label="Jumlah">Rp{{ bayar.jumlah_bayar }}</td>
+                    <td data-label="Status">{{ bayar.status_bayar }}</td>
+                    <td data-label="Tanggal Bayar">{{ bayar.tanggal_bayar }}</td>
+                    <td data-label="Bukti Pembayaran">
+                        {% if bayar.bukti_pembayaran %}
+                            <a href="{{ bayar.bukti_pembayaran.url }}" target="_blank">Lihat</a>
+                        {% else %}
+                            Belum Ada
+                        {% endif %}
+                    </td>
+                    <td data-label="Upload Bukti">
+                        {% if bayar.status_bayar == 'belum lunas' %}
+                        <form method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="hidden" name="pembayaran_id" value="{{ bayar.id }}">
+                            {{ form.bukti_pembayaran }}
+                            <button type="submit">Upload</button>
+                        </form>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endblock %}
+    </div>
 </body>
 </html>

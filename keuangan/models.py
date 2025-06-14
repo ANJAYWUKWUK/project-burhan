@@ -141,8 +141,19 @@ class LaporanKeuangan(models.Model):
     pengeluaran = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     saldo = models.DecimalField(max_digits=15, decimal_places=2, default=0)
 
+    def update_pemasukan(self, jumlah):
+        self.pemasukan += jumlah
+        self.saldo += jumlah
+        self.save()
+
+    def update_pengeluaran(self, jumlah):
+        self.pengeluaran += jumlah
+        self.saldo -= jumlah
+        self.save()
+
     def __str__(self):
         return f"Laporan Keuangan {self.tanggal}"
+
 
 class TabunganSiswa(models.Model):
     siswa = models.ForeignKey(Siswa, on_delete=models.CASCADE)

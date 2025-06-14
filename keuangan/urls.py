@@ -19,6 +19,11 @@ urlpatterns = [
     path('get-siswa-by-kelas/', views.get_siswa_by_kelas, name='get_siswa_by_kelas'),
     path('get-pembayaran-by-siswa/', views.get_pembayaran_by_siswa, name='get_pembayaran_by_siswa'),
 
+    path('tabungan/kelola-tabungan/', views.tabungan_view, name='kelola_tabungan'),
+    path('tabungan/', lambda request: redirect('kelola_tabungan')),
+    path('laporan/', views.laporan_keuangan_view, name='laporan_keuangan'),
+    path('laporan/export/', views.export_laporankeuangan_excel, name='export_laporan_excel'),
+
     # Tambah dan Edit Cicilan DSP
     path('dsp/', views.dsp_list, name='dsp_list'),
     path('dsp/form/', views.form_dsp, name='form_dsp_baru'),  # untuk tambah DSP
@@ -42,11 +47,9 @@ urlpatterns = [
     path('siswa/tagihan/', views.tagihan_spp, name='tagihan_spp'),
     path('test-email/', views.test_email, name='test_email'),
     path('export-pembayaran/', export_pembayaran_excel, name='export_pembayaran_excel'),  
-    path('tabungan/kelola-tabungan/', views.tabungan_view, name='kelola_tabungan'),
-    path('tabungan/', lambda request: redirect('kelola_tabungan')),
     path('ppdb/saya/', views.siswa_ppdb_detail, name='siswa_ppdb_detail'),
     path('ppdb/saya/tambah/<int:ppdb_id>/', views.siswa_ppdb_cicilan_tambah, name='siswa_ppdb_cicilan_tambah'),
-
+    path('tabungan-siswa/', views.tabungan_siswa_view, name='tabungan_siswa'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

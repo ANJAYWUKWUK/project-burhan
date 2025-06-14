@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Kelola Pembayaran SPP</title>
     <style>
-        * {
 * {
     box-sizing: border-box;
     margin: 0;
@@ -19,52 +18,30 @@ body {
     display: flex;
     min-height: 100vh;
 }
-
-/* Sidebar */
 .sidebar {
     width: 250px;
-    background: rgba(75, 0, 130, 0.95);
-    backdrop-filter: blur(6px);
+    background: #6a0dad;
     color: white;
-    padding: 30px 20px;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    box-shadow: 3px 0 15px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-}
-
-.sidebar h2 {
-    font-size: 22px;
-    margin-bottom: 6px;
-}
-
-.sidebar p {
-    font-size: 13px;
-    margin-bottom: 25px;
-    color: #d4c5f9;
+    min-height: 100vh;
+    padding: 20px;
 }
 
 .sidebar a {
+    color: white;
     text-decoration: none;
-    color: #fff;
-    padding: 10px 15px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    font-size: 15px;
-    background-color: transparent;
+    display: block;
+    padding: 10px;
 }
 
 .sidebar a:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background: #1A252F;
 }
 
 /* Content */
-.main-content {
-    flex-grow: 1;
-    padding: 40px;
-}
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+        }
 
 /* Headings */
 h1, h3 {
@@ -156,49 +133,22 @@ button:hover {
 .export-link:hover {
     background-color: #138496;
 }
-
-/* Responsive */
-@media (max-width: 768px) {
-    body {
-        flex-direction: column;
-    }
-
-    .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-    }
-
-    .main-content {
-        padding: 20px;
-    }
-
-    table th, table td {
-        font-size: 13px;
-        padding: 10px;
-    }
-
-    .sidebar a {
-        font-size: 14px;
-        padding: 8px 12px;
-    }
-}
-
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <h2>SDIT BIRRUWATTAQWA</h2>
-    <p>Laporan Keuangan</p>
-       <a href="{% url 'kelola_pembayaran' %}">Kelola Pembayaran SPP</a>
+    <div class="sidebar">
+        <h4>SDIT BIRRUWATTAQWA</h4>
+        <p>Laporan Keuangan</p>
+        <a href="{% url 'dashboard_redirect' %}">dashboard</a>
+        <a href="{% url 'kelola_pembayaran' %}">Kelola Pembayaran SPP</a>
         <a href="{% url 'dsp_list' %}">Kelola Pembayaran DSP</a>
         <a href="{% url 'ppdb_list' %}">Kelola Pembayaran PPDB </a>
         <a href="{% url 'kelola_tabungan' %}">Kelola Tabungan</a>
-        <a href="#"> Kelola Laporan</a>
-        <a href="#">Logout</a>
+        <a href="{% url 'laporan_keuangan' %}"> Kelola Laporan</a>
+        <a href="{% url 'logout' %}">Logout</a>
         <a href="{% url 'daftar_siswa' %}">Update</a>
-</div>
+    </div>
 
 <div class="main-content">
     <h1>Kelola Pembayaran SPP</h1>

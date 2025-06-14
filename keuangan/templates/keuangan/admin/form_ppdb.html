@@ -1,55 +1,127 @@
+{% load widget_tweaks %}
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>{{ judul }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<style>
-        body {
-            display: flex;
-        }
-        .sidebar {
-            width: 250px;
-            background: #6a0dad;
-            color: white;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .sidebar a {
-            color: white;
-            text-decoration: none;
-            display: block;
-            padding: 10px;
-        }
-        .sidebar a:hover {
-            background: #1A252F;
-        }
-        .main-content {
-            flex-grow: 1;
-            padding: 20px;
-        }
-</style>
-<body>
+  <meta charset="UTF-8">
+  <title>{{ judul }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f1f1f1;
+      display: flex;
+      min-height: 100vh;
+    }
 
-    <div class="sidebar">
-        <h4>SDIT BIRRUWATTAQWA</h4>
-        <p>Laporan Keuangan</p>
-       <a href="{% url 'kelola_pembayaran' %}">Kelola Pembayaran SPP</a>
-        <a href="{% url 'dsp_list' %}">Kelola Pembayaran DSP</a>
-        <a href="{% url 'ppdb_list' %}">Kelola Pembayaran PPDB </a>
-        <a href="{% url 'kelola_tabungan' %}">Kelola Tabungan</a>
-        <a href="#"> Kelola Laporan</a>
-        <a href="#">Logout</a>
-        <a href="{% url 'daftar_siswa' %}">Update</a>
-    </div>
-<div class="container mt-5">
-    <h2 class="mb-4">{{ judul }}</h2>
-    <form method="post">
+    .sidebar {
+      width: 250px;
+      background: #6a0dad;
+      color: white;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      display: block;
+      padding: 10px;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+
+    .sidebar a:hover {
+      background: #1A252F;
+    }
+
+    .main-content {
+      flex-grow: 1;
+      padding: 50px;
+      background-color: #f8f9fa;
+    }
+
+    .form-container {
+      background-color: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .form-label {
+      font-weight: 600;
+    }
+
+    .btn {
+      min-width: 120px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        min-height: auto;
+      }
+
+      .main-content {
+        padding: 20px;
+      }
+
+      .form-container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+      <h4>SDIT BIRRUWATTAQWA</h4>
+      <p>Laporan Keuangan</p>
+      <a href="{% url 'dashboard_redirect' %}">Dashboard</a>
+      <a href="{% url 'kelola_pembayaran' %}">Kelola Pembayaran SPP</a>
+      <a href="{% url 'dsp_list' %}">Kelola Pembayaran DSP</a>
+      <a href="{% url 'ppdb_list' %}">Kelola Pembayaran PPDB</a>
+      <a href="{% url 'kelola_tabungan' %}">Kelola Tabungan</a>
+      <a href="{% url 'laporan_keuangan' %}"> Kelola Laporan</a>
+      <a href="{% url 'logout' %}">Logout</a>
+      <a href="{% url 'daftar_siswa' %}">Update</a>
+  </div>
+
+  <div class="main-content">
+    <div class="form-container">
+      <h3 class="mb-4 text-center">{{ judul }}</h3>
+      <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-success">Simpan</button>
-        <a href="{% url 'ppdb_list' %}" class="btn btn-secondary">Kembali</a>
-    </form>
-</div>
+
+        <div class="mb-3">
+          <label for="{{ form.siswa.id_for_label }}" class="form-label">Siswa</label>
+          {{ form.siswa|add_class:"form-select" }}
+          {% for error in form.siswa.errors %}
+            <div class="text-danger">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label for="{{ form.total_tagihan.id_for_label }}" class="form-label">Total Tagihan</label>
+          {{ form.total_tagihan|add_class:"form-control" }}
+          {% for error in form.total_tagihan.errors %}
+            <div class="text-danger">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="d-flex justify-content-end">
+          <button type="submit" class="btn btn-primary">Simpan</button>
+          <a href="{% url 'ppdb_list' %}" class="btn btn-secondary ms-2">Batal</a>
+        </div>
+      </form>
+    </div>
+  </div>
 </body>
 </html>

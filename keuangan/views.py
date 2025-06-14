@@ -11,6 +11,8 @@ from django.contrib import messages
 from .forms import KategoriForm, BankForm
 from django.db.models import Sum
 from django.utils import timezone
+from openpyxl.styles import Font
+from django.db.models.functions import TruncDay, TruncMonth, TruncYear
 import json
 import calendar
 from datetime import timedelta
@@ -26,6 +28,7 @@ from django.core.files.storage import FileSystemStorage
 from django.utils.datastructures import MultiValueDictKeyError
 from django.http import JsonResponse
 from django.db import transaction   
+from openpyxl.utils import get_column_letter
 
 def login_view(request):
     if request.method == 'POST':
@@ -623,6 +626,17 @@ def get_pembayaran_by_siswa(request):
     )
     return JsonResponse(list(pembayaran), safe=False)
 
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.db.models import Sum
+from django.db import transaction
+from datetime import datetime
+import calendar
+
+from .models import Siswa, TabunganSiswa, PenarikanTabungan
+from .forms import PilihKelasForm, PilihBulanForm
+
+
 def tabungan_view(request):
     mode = request.GET.get('mode', 'input')
     context = {'mode': mode}
@@ -636,47 +650,48 @@ def tabungan_view(request):
         selected_tahun = request.POST.get('tahun') or request.GET.get('tahun')
 
         if selected_kelas and selected_bulan and selected_tahun:
-            selected_bulan = int(selected_bulan)
-            selected_tahun = int(selected_tahun)
-            siswa_list = Siswa.objects.filter(kelas=selected_kelas)
-            _, last_day = calendar.monthrange(selected_tahun, selected_bulan)
-            tanggal_list = [
-                day for day in range(1, last_day + 1)
-                if datetime(selected_tahun, selected_bulan, day).weekday() < 5
-            ]
+            try:
+                selected_bulan = int(selected_bulan)
+                selected_tahun = int(selected_tahun)
+                siswa_list = Siswa.objects.filter(kelas=selected_kelas)
+                _, last_day = calendar.monthrange(selected_tahun, selected_bulan)
+                tanggal_list = list(range(1, last_day + 1))
+            except ValueError:
+                messages.error(request, "Bulan dan Tahun harus berupa angka.")
+                return redirect('kelola_tabungan')
 
-        if request.method == 'POST' and 'simpan' in request.POST:
-            for siswa in siswa_list:
-                checked_data[siswa.id] = request.POST.getlist(f'tanggal_{siswa.id}[]')
+            if request.method == 'POST' and 'simpan' in request.POST:
+                for siswa in siswa_list:
+                    checked_data[siswa.id] = request.POST.getlist(f'tanggal_{siswa.id}[]')
 
-            for siswa in siswa_list:
-                tanggal_terpilih = {
-                    datetime(selected_tahun, selected_bulan, int(t)).date()
-                    for t in checked_data.get(siswa.id, [])
-                }
+                for siswa in siswa_list:
+                    tanggal_terpilih = {
+                        datetime(selected_tahun, selected_bulan, int(t)).date()
+                        for t in checked_data.get(siswa.id, [])
+                    }
 
-                existing = TabunganSiswa.objects.filter(
-                    siswa=siswa, tanggal__month=selected_bulan, tanggal__year=selected_tahun
-                )
-                existing_tanggal = set(e.tanggal for e in existing)
-
-                TabunganSiswa.objects.filter(
-                    siswa=siswa, tanggal__in=existing_tanggal - tanggal_terpilih
-                ).delete()
-
-                for tgl in tanggal_terpilih - existing_tanggal:
-                    TabunganSiswa.objects.get_or_create(
-                        siswa=siswa, tanggal=tgl, defaults={'nominal': 5000}
+                    existing = TabunganSiswa.objects.filter(
+                        siswa=siswa, tanggal__month=selected_bulan, tanggal__year=selected_tahun
                     )
+                    existing_tanggal = set(e.tanggal for e in existing)
 
-            messages.success(request, "Tabungan berhasil disimpan.")
+                    TabunganSiswa.objects.filter(
+                        siswa=siswa, tanggal__in=existing_tanggal - tanggal_terpilih
+                    ).delete()
 
-        else:
-            for siswa in siswa_list:
+                    for tgl in tanggal_terpilih - existing_tanggal:
+                        TabunganSiswa.objects.get_or_create(
+                            siswa=siswa, tanggal=tgl, defaults={'nominal': 5000}
+                        )
+
+                messages.success(request, "Tabungan berhasil disimpan.")
+            else:
                 tabungan = TabunganSiswa.objects.filter(
-                    siswa=siswa, tanggal__month=selected_bulan, tanggal__year=selected_tahun
+                    siswa__in=siswa_list, tanggal__month=selected_bulan, tanggal__year=selected_tahun
                 )
-                checked_data[siswa.id] = [t.tanggal.day for t in tabungan]
+                for item in tabungan:
+                    key = f"{item.siswa.id}_{item.tanggal.month}_{item.tanggal.year}"
+                    checked_data.setdefault(key, []).append(item.tanggal.strftime('%Y-%m-%d'))
 
         context.update({
             'kelas_form': kelas_form,
@@ -796,3 +811,168 @@ def tabungan_view(request):
         })
 
     return render(request, 'keuangan/admin/tabungan.html', context)
+
+@login_required
+def tabungan_siswa_view(request):
+    siswa = getattr(request.user, 'siswa', None)
+    if not siswa:
+        return redirect('dashboard')  # atau sesuaikan dengan redirect lain
+
+    # ❗ Ambil hanya yang belum ditarik
+    tabungan_masuk = TabunganSiswa.objects.filter(siswa=siswa, tarik=False)
+    penarikan = PenarikanTabungan.objects.filter(siswa=siswa)
+
+    total_setoran = sum(t.nominal for t in tabungan_masuk)
+    total_penarikan = sum(p.jumlah_ditarik for p in penarikan)
+
+    # ❗ Biar tidak minus
+    saldo = max(total_setoran - total_penarikan, 0)
+
+    context = {
+        'siswa': siswa,
+        'tabungan_masuk': tabungan_masuk,
+        'penarikan': penarikan,
+        'saldo': saldo,
+    }
+
+    return render(request, 'keuangan/siswa/tabungan_siswa.html', context)
+
+def laporan_keuangan_view(request):
+    tanggal_hari_ini = timezone.now().date()
+    kategori = request.GET.get('kategori')
+    export = request.GET.get('export')
+
+    # Ambil semua transaksi belum diposting
+    spp = PembayaranSPP.objects.filter(is_posted_to_laporan_keuangan=False, status_bayar='lunas')
+    dsp = DSPCicilan.objects.filter(is_posted_to_laporan_keuangan=False)
+    ppdb = PPDBCicilan.objects.filter(is_posted_to_laporan_keuangan=False)
+    tabungan = TabunganSiswa.objects.filter(is_posted_to_laporan_keuangan=False)
+    penarikan = PenarikanTabungan.objects.filter(is_posted_to_laporan_keuangan=False)
+
+    # Hitung total pemasukan & pengeluaran
+    total_masuk = (
+        (spp.aggregate(Sum('jumlah_bayar'))['jumlah_bayar__sum'] or 0) +
+        (dsp.aggregate(Sum('jumlah'))['jumlah__sum'] or 0) +
+        (ppdb.aggregate(Sum('jumlah'))['jumlah__sum'] or 0) +
+        (tabungan.aggregate(Sum('nominal'))['nominal__sum'] or 0)
+    )
+    total_keluar = (penarikan.aggregate(Sum('jumlah_ditarik'))['jumlah_ditarik__sum'] or 0)
+
+    # Export ke Excel
+    if export == 'excel':
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Laporan Keuangan"
+        ws.append(['Tanggal', 'Kategori', 'Nama Siswa', 'Jumlah (Rp)', 'Status'])
+
+        for cell in ws["1:1"]:
+            cell.font = Font(bold=True)
+
+        def append_data(qs, label, field, is_masuk=True):
+            for item in qs:
+                siswa = getattr(item, 'siswa', None)
+                if siswa is None and hasattr(item, 'dsp'):
+                    siswa = item.dsp.siswa
+                if siswa is None and hasattr(item, 'ppdb'):
+                    siswa = item.ppdb.siswa
+
+                nama = getattr(siswa, 'nama', getattr(siswa, 'username', '-'))
+                jumlah = getattr(item, field, 0)
+                tanggal = getattr(item, 'tanggal', getattr(item, 'tanggal_bayar', timezone.now().date()))
+                status = "Pemasukan" if is_masuk else "Pengeluaran"
+                ws.append([tanggal, label, nama, float(jumlah), status])
+
+        if not kategori or kategori == 'spp':
+            append_data(spp, 'SPP', 'jumlah_bayar')
+        if not kategori or kategori == 'dsp':
+            append_data(dsp, 'DSP', 'jumlah')
+        if not kategori or kategori == 'ppdb':
+            append_data(ppdb, 'PPDB', 'jumlah')
+        if not kategori or kategori == 'tabungan':
+            append_data(tabungan, 'Tabungan', 'nominal')
+        if not kategori or kategori == 'penarikan':
+            append_data(penarikan, 'Penarikan Tabungan', 'jumlah_ditarik', is_masuk=False)
+
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=laporan_keuangan.xlsx'
+        wb.save(response)
+        return response
+
+    # Posting ke LaporanKeuangan
+    if request.method == 'POST':
+        LaporanKeuangan.objects.create(
+            tanggal=tanggal_hari_ini,
+            pemasukan=total_masuk,
+            pengeluaran=total_keluar,
+            saldo=total_masuk - total_keluar
+        )
+        spp.update(is_posted_to_laporan_keuangan=True)
+        dsp.update(is_posted_to_laporan_keuangan=True)
+        ppdb.update(is_posted_to_laporan_keuangan=True)
+        tabungan.update(is_posted_to_laporan_keuangan=True)
+        penarikan.update(is_posted_to_laporan_keuangan=True)
+        return redirect('laporan_keuangan')
+
+    context = {
+        'tanggal': tanggal_hari_ini,
+        'spp_total': spp.aggregate(Sum('jumlah_bayar'))['jumlah_bayar__sum'] or 0,
+        'dsp_total': dsp.aggregate(Sum('jumlah'))['jumlah__sum'] or 0,
+        'ppdb_total': ppdb.aggregate(Sum('jumlah'))['jumlah__sum'] or 0,
+        'tabungan_total': tabungan.aggregate(Sum('nominal'))['nominal__sum'] or 0,
+        'penarikan_total': penarikan.aggregate(Sum('jumlah_ditarik'))['jumlah_ditarik__sum'] or 0,
+        'total_masuk': total_masuk,
+        'total_keluar': total_keluar,
+        'saldo': total_masuk - total_keluar,
+        'transaksi': {
+            'spp': spp,
+            'dsp': dsp,
+            'ppdb': ppdb,
+            'tabungan': tabungan,
+            'penarikan': penarikan,
+        },
+    }
+    return render(request, 'keuangan/admin/laporan_keuangan.html', context)
+
+def export_laporankeuangan_excel(request):
+    hari_ini = datetime.date.today()
+
+    spp = PembayaranSPP.objects.filter(tanggal__date=hari_ini, is_posted_to_laporan_keuangan=True)
+    dsp = DSPCicilan.objects.filter(tanggal__date=hari_ini, is_posted_to_laporan_keuangan=True)
+    ppdb = PPDBCicilan.objects.filter(tanggal__date=hari_ini, is_posted_to_laporan_keuangan=True)
+    tabungan = TabunganSiswa.objects.filter(tanggal__date=hari_ini, is_posted_to_laporan_keuangan=True)
+    penarikan = PenarikanTabungan.objects.filter(tanggal__date=hari_ini, is_posted_to_laporan_keuangan=True)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Laporan Keuangan"
+
+    ws.append(["Tanggal", str(hari_ini)])
+    ws.append([])
+    ws.append(["Kategori", "Nama Siswa", "Jumlah (Rp)"])
+
+    # Helper function
+    def append_data(kategori, queryset, get_nama, get_jumlah):
+        for obj in queryset:
+            nama = get_nama(obj)
+            jumlah = get_jumlah(obj)
+            ws.append([kategori, nama, jumlah])
+
+    append_data("SPP", spp, lambda x: x.siswa.nama, lambda x: x.jumlah_bayar)
+    append_data("DSP", dsp, lambda x: x.dsp.siswa.nama, lambda x: x.jumlah)
+    append_data("PPDB", ppdb, lambda x: x.ppdb.siswa.nama, lambda x: x.jumlah)
+    append_data("Tabungan", tabungan, lambda x: x.siswa.nama, lambda x: x.nominal)
+    append_data("Penarikan Tabungan", penarikan, lambda x: x.siswa.nama, lambda x: x.jumlah_ditarik)
+
+    # Format kolom
+    for column_cells in ws.columns:
+        length = max(len(str(cell.value)) for cell in column_cells)
+        ws.column_dimensions[get_column_letter(column_cells[0].column)].width = length + 2
+
+    # Output response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    filename = f"Laporan_Keuangan_{hari_ini}.xlsx"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response

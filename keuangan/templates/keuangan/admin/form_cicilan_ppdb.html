@@ -9,7 +9,7 @@
         body {
             display: flex;
         }
-        .sidebar {
+     .sidebar {
             width: 250px;
             background: #6a0dad;
             color: white;
@@ -36,12 +36,13 @@
     <div class="sidebar">
         <h4>SDIT BIRRUWATTAQWA</h4>
         <p>Laporan Keuangan</p>
-       <a href="{% url 'kelola_pembayaran' %}">Kelola Pembayaran SPP</a>
+        <a href="{% url 'dashboard_redirect' %}">dashboard</a>
+        <a href="{% url 'kelola_pembayaran' %}">Kelola Pembayaran SPP</a>
         <a href="{% url 'dsp_list' %}">Kelola Pembayaran DSP</a>
         <a href="{% url 'ppdb_list' %}">Kelola Pembayaran PPDB </a>
         <a href="{% url 'kelola_tabungan' %}">Kelola Tabungan</a>
-        <a href="#"> Kelola Laporan</a>
-        <a href="#">Logout</a>
+        <a href="{% url 'laporan_keuangan' %}"> Kelola Laporan</a>
+        <a href="{% url 'logout' %}">Logout</a>
         <a href="{% url 'daftar_siswa' %}">Update</a>
     </div>
 <div class="container mt-5">

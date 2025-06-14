@@ -17,39 +17,22 @@ body {
 }
 
 /* Sidebar */
-.sidebar {
-    width: 250px;
-    background: #6a0dad;
-    color: white;
-    min-height: 100vh;
-    padding: 20px;
-    position: fixed;
-    top: 0;
-    left: 0;
-}
-
-.sidebar h4 {
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-.sidebar p {
-    font-size: 0.95rem;
-    margin-bottom: 20px;
-}
-
-.sidebar a {
-    color: white;
-    text-decoration: none;
-    display: block;
-    padding: 10px 15px;
-    border-radius: 6px;
-    transition: background 0.3s ease;
-}
-
-.sidebar a:hover {
-    background: #4b0d91;
-}
+     .sidebar {
+            width: 250px;
+            background: #6a0dad;
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+        }
+        .sidebar a:hover {
+            background: #1A252F;
+        }
 
 /* Main Content */
 .container.mt-5 {
@@ -115,12 +98,13 @@ h3 {
     <div class="sidebar">
         <h4>SDIT BIRRUWATTAQWA</h4>
         <p>Laporan Keuangan</p>
+        <a href="{% url 'dashboard_redirect' %}">dashboard</a>
         <a href="{% url 'kelola_pembayaran' %}">Kelola Pembayaran SPP</a>
         <a href="{% url 'dsp_list' %}">Kelola Pembayaran DSP</a>
         <a href="{% url 'ppdb_list' %}">Kelola Pembayaran PPDB </a>
         <a href="{% url 'kelola_tabungan' %}">Kelola Tabungan</a>
-        <a href="#"> Kelola Laporan</a>
-        <a href="#">Logout</a>
+        <a href="{% url 'laporan_keuangan' %}"> Kelola Laporan</a>
+        <a href="{% url 'logout' %}">Logout</a>
         <a href="{% url 'daftar_siswa' %}">Update</a>
     </div>
 

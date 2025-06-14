@@ -16,6 +16,8 @@ def get_item(dictionary, key):
 def get_nama_by_queryset(queryset, id):
     return queryset.filter(id=id).first().nama if queryset.filter(id=id).exists() else "-"
 
+
+
 @register.filter
-def get_item(dict_data, key):
+def get_item_by_key(dict_data, key):
     return dict_data.get(key, [])
