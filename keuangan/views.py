@@ -530,9 +530,19 @@ def form_ppdb(request, ppdb_id=None):
 
     return render(request, 'keuangan/admin/form_ppdb.html', {'form': form, 'judul': judul})
 
+# Fungsi helper untuk update total pembayaran PPDB
+def update_ppdb_total(ppdb):
+    total = PPDBCicilan.objects.filter(ppdb=ppdb).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+    ppdb.total_terbayar = total
+    ppdb.sisa_tagihan = ppdb.total_tagihan - total
+    ppdb.status = "Lunas" if ppdb.sisa_tagihan <= 0 else "Belum Lunas"
+    ppdb.save()
+
+# View detail PPDB
 @login_required
 def ppdb_detail(request, ppdb_id):
     ppdb = get_object_or_404(PPDB, id=ppdb_id)
+    ppdb.refresh_from_db()  # Penting untuk ambil data paling update dari database
     cicilan_list = PPDBCicilan.objects.filter(ppdb=ppdb).order_by('tanggal')
 
     return render(request, 'keuangan/admin/ppdb_detail.html', {
@@ -540,6 +550,7 @@ def ppdb_detail(request, ppdb_id):
         'cicilan_list': cicilan_list
     })
 
+# View tambah/edit cicilan PPDB
 @login_required
 def form_cicilan_ppdb(request, ppdb_id, cicilan_id=None):
     ppdb = get_object_or_404(PPDB, id=ppdb_id)
@@ -553,19 +564,19 @@ def form_cicilan_ppdb(request, ppdb_id, cicilan_id=None):
             new_cicilan.ppdb = ppdb
             new_cicilan.save()
 
-            # Update data
-            total = PPDBCicilan.objects.filter(ppdb=ppdb).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-            ppdb.total_terbayar = total
-            ppdb.sisa_tagihan = ppdb.total_tagihan - total
-            ppdb.status = "Lunas" if ppdb.sisa_tagihan <= 0 else "Belum Lunas"
-            ppdb.save()
+            # Update total PPDB
+            update_ppdb_total(ppdb)
 
             messages.success(request, 'Cicilan berhasil disimpan.')
             return redirect('ppdb_detail', ppdb_id=ppdb.id)
     else:
         form = PPDBCicilanForm(instance=cicilan)
 
-    return render(request, 'keuangan/admin/form_cicilan_ppdb.html', {'form': form, 'judul': judul, 'ppdb': ppdb})
+    return render(request, 'keuangan/admin/form_cicilan_ppdb.html', {
+        'form': form,
+        'judul': judul,
+        'ppdb': ppdb
+    })
 
 @login_required
 def ppdb_delete(request, ppdb_id):
@@ -594,18 +605,31 @@ def siswa_ppdb_cicilan_tambah(request, ppdb_id):
         form = PPDBCicilanForm(request.POST, request.FILES)
         if form.is_valid():
             cicilan = form.save(commit=False)
-            cicilan.ppdb = ppdb
-            cicilan.tanggal = timezone.now().date()
-            cicilan.save()
 
-            # Hitung ulang total terbayar & status
-            total_terbayar = PPDBCicilan.objects.filter(ppdb=ppdb).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
-            ppdb.total_terbayar = total_terbayar
-            ppdb.sisa_tagihan = ppdb.total_tagihan - total_terbayar
-            ppdb.status = "Lunas" if ppdb.sisa_tagihan <= 0 else "Belum Lunas"
-            ppdb.save()
+            # Jumlah cicilan baru
+            jumlah_baru = cicilan.jumlah
 
-            return redirect('siswa_ppdb_detail')
+            # Hitung total terbayar sejauh ini
+            total_terbayar_sekarang = PPDBCicilan.objects.filter(ppdb=ppdb).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+
+            sisa = ppdb.total_tagihan - total_terbayar_sekarang
+
+            if jumlah_baru > sisa:
+                form.add_error('jumlah', f"Jumlah cicilan melebihi sisa tagihan (sisa: Rp{sisa:,})")
+            else:
+                cicilan.ppdb = ppdb
+                cicilan.tanggal = timezone.now().date()
+                cicilan.save()
+
+                # Hitung ulang total terbayar & status
+                total_terbayar = PPDBCicilan.objects.filter(ppdb=ppdb).aggregate(Sum('jumlah'))['jumlah__sum'] or 0
+                ppdb.total_terbayar = total_terbayar
+                ppdb.sisa_tagihan = max(ppdb.total_tagihan - total_terbayar, 0)
+                ppdb.status = "Lunas" if ppdb.sisa_tagihan <= 0 else "Belum Lunas"
+                ppdb.save()
+
+                return redirect('siswa_ppdb_detail')
+
     else:
         form = PPDBCicilanForm()
 
@@ -842,12 +866,12 @@ def laporan_keuangan_view(request):
     kategori = request.GET.get('kategori')
     export = request.GET.get('export')
 
-    # Ambil semua transaksi belum diposting
-    spp = PembayaranSPP.objects.filter(is_posted_to_laporan_keuangan=False, status_bayar='lunas')
-    dsp = DSPCicilan.objects.filter(is_posted_to_laporan_keuangan=False)
-    ppdb = PPDBCicilan.objects.filter(is_posted_to_laporan_keuangan=False)
-    tabungan = TabunganSiswa.objects.filter(is_posted_to_laporan_keuangan=False)
-    penarikan = PenarikanTabungan.objects.filter(is_posted_to_laporan_keuangan=False)
+    # Ambil SEMUA transaksi
+    spp = PembayaranSPP.objects.filter(status_bayar='lunas')
+    dsp = DSPCicilan.objects.all()
+    ppdb = PPDBCicilan.objects.all()
+    tabungan = TabunganSiswa.objects.all()
+    penarikan = PenarikanTabungan.objects.all()
 
     # Hitung total pemasukan & pengeluaran
     total_masuk = (
@@ -858,60 +882,39 @@ def laporan_keuangan_view(request):
     )
     total_keluar = (penarikan.aggregate(Sum('jumlah_ditarik'))['jumlah_ditarik__sum'] or 0)
 
-    # Export ke Excel
-    if export == 'excel':
+    # Export ke Excel berdasarkan kategori
+    if export == 'excel' and kategori:
         wb = openpyxl.Workbook()
         ws = wb.active
-        ws.title = "Laporan Keuangan"
-        ws.append(['Tanggal', 'Kategori', 'Nama Siswa', 'Jumlah (Rp)', 'Status'])
+        ws.title = f"Laporan {kategori.upper()}"
+        ws.append(['Tanggal', 'Nama Siswa', 'Jumlah (Rp)'])
 
         for cell in ws["1:1"]:
             cell.font = Font(bold=True)
 
-        def append_data(qs, label, field, is_masuk=True):
+        def write_rows(qs, field, tanggal_field, siswa_getter):
             for item in qs:
-                siswa = getattr(item, 'siswa', None)
-                if siswa is None and hasattr(item, 'dsp'):
-                    siswa = item.dsp.siswa
-                if siswa is None and hasattr(item, 'ppdb'):
-                    siswa = item.ppdb.siswa
-
-                nama = getattr(siswa, 'nama', getattr(siswa, 'username', '-'))
+                siswa = siswa_getter(item)
+                nama = getattr(siswa, 'nama', '-') if siswa else '-'
                 jumlah = getattr(item, field, 0)
-                tanggal = getattr(item, 'tanggal', getattr(item, 'tanggal_bayar', timezone.now().date()))
-                status = "Pemasukan" if is_masuk else "Pengeluaran"
-                ws.append([tanggal, label, nama, float(jumlah), status])
+                tanggal = getattr(item, tanggal_field, tanggal_hari_ini)
+                ws.append([tanggal, nama, float(jumlah)])
 
-        if not kategori or kategori == 'spp':
-            append_data(spp, 'SPP', 'jumlah_bayar')
-        if not kategori or kategori == 'dsp':
-            append_data(dsp, 'DSP', 'jumlah')
-        if not kategori or kategori == 'ppdb':
-            append_data(ppdb, 'PPDB', 'jumlah')
-        if not kategori or kategori == 'tabungan':
-            append_data(tabungan, 'Tabungan', 'nominal')
-        if not kategori or kategori == 'penarikan':
-            append_data(penarikan, 'Penarikan Tabungan', 'jumlah_ditarik', is_masuk=False)
+        if kategori == 'spp':
+            write_rows(spp, 'jumlah_bayar', 'tanggal_bayar', lambda x: x.siswa)
+        elif kategori == 'dsp':
+            write_rows(dsp, 'jumlah', 'tanggal', lambda x: x.dsp.siswa)
+        elif kategori == 'ppdb':
+            write_rows(ppdb, 'jumlah', 'tanggal', lambda x: x.ppdb.siswa)
+        elif kategori == 'tabungan':
+            write_rows(tabungan, 'nominal', 'tanggal', lambda x: x.siswa)
+        elif kategori == 'penarikan':
+            write_rows(penarikan, 'jumlah_ditarik', 'tanggal', lambda x: x.siswa)
 
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = 'attachment; filename=laporan_keuangan.xlsx'
+        response['Content-Disposition'] = f'attachment; filename=laporan_{kategori}.xlsx'
         wb.save(response)
         return response
-
-    # Posting ke LaporanKeuangan
-    if request.method == 'POST':
-        LaporanKeuangan.objects.create(
-            tanggal=tanggal_hari_ini,
-            pemasukan=total_masuk,
-            pengeluaran=total_keluar,
-            saldo=total_masuk - total_keluar
-        )
-        spp.update(is_posted_to_laporan_keuangan=True)
-        dsp.update(is_posted_to_laporan_keuangan=True)
-        ppdb.update(is_posted_to_laporan_keuangan=True)
-        tabungan.update(is_posted_to_laporan_keuangan=True)
-        penarikan.update(is_posted_to_laporan_keuangan=True)
-        return redirect('laporan_keuangan')
 
     context = {
         'tanggal': tanggal_hari_ini,
